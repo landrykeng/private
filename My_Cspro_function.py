@@ -481,7 +481,7 @@ def extrat_chef(superviseur=None):
     
     
     for agent in code_agent:
-        fichier="extracted_data/CH" + str(agent) + ".csdb"
+        fichier="extracted_data/CHE" + str(agent) + ".csdb"
         try:
             if os.path.exists(fichier):
                 if merged_df is None:

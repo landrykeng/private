@@ -658,14 +658,24 @@ def main():
         
         
         
-        @st.cache_data()
+        #@st.cache_data()
         def load_data():
             download_ftp_files()
             Unzip_All_Files()
-            df=extrat_eleve()
-            df.to_excel('Data.xlsx', index=False)
+            df_eleve=extrat_eleve()
+            df_enseignant=extrat_enseignant()
+            df_maire=extrat_maire()
+            df_ec_maire=extrat_ecole_maire()
+            df_chef=extrat_chef()
+            
+            df_eleve.to_excel('Data_eleve.xlsx', index=False)
+            df_enseignant.to_excel('Data_ens.xlsx', index=False)
+            df_maire.to_excel('Data_maire.xlsx', index=False)
+            df_ec_maire.to_excel('Data_ec_maire.xlsx', index=False)
+            df_chef.to_excel('Data_chef.xlsx', index=False)
+            
             last_update=datetime.now()
-            return df, last_update
+            return df_eleve, df_enseignant, df_maire, df_ec_maire ,df_chef , last_update
         # Test pour le chargegement et la récupération
         
         
@@ -698,7 +708,9 @@ def main():
         with col_fonfig[0]:
             upload_bt=st.button("Mise à jour")
             if upload_bt:
-                data_eleve, last_update =load_data()
+                with st.spinner("Téléchargement des nouvelle donnée...",show_time=True):
+                    df_eleve, df_enseignant, df_maire, df_ec_maire ,df_chef , last_update =load_data()
+                    st.success("Mise à joue effectuée.")
         with col_fonfig[1]:
             st.markdown(f"""
                 <div style="
@@ -719,8 +731,17 @@ def main():
             """, unsafe_allow_html=True)
         
         st.write("")
-        data_eleve=pd.read_excel("Data.xlsx")
-        data_eleve
+        df_eleve=pd.read_excel("Data_eleve.xlsx")
+        df_enseignant=pd.read_excel("Data_ens.xlsx")
+        df_maire=pd.read_excel("Data_maire.xlsx")
+        df_ec_maire=pd.read_excel("Data_ec_maire.xlsx")
+        df_chef=pd.read_excel("Data_chef.xlsx")
+        
+        df_eleve
+        df_maire
+        df_ec_maire
+        df_enseignant
+        df_chef
         
         #==========================================================================
         
