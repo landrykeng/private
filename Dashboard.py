@@ -801,7 +801,7 @@ def main():
         with col_fonfig[0]:
             upload_bt=st.button("Mise à jour")
             if upload_bt:
-                with st.spinner("Téléchargement des nouvelle donnée...",show_time=True):
+                with st.spinner("Téléchargement des nouvelles données...",show_time=True):
                     All_data, geo_data, last_update =load_data()
                     st.success("Mise à joue effectuée.")
         with col_fonfig[1]:
