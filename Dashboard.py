@@ -694,16 +694,31 @@ def main():
         cl_tb=st.columns([1,7,1])
         #============ESPACE DE MISE A JOUR=======================================
         col_fonfig=st.columns(2)
-        
+        last_update=None
         with col_fonfig[0]:
             upload_bt=st.button("Mise à jour")
             if upload_bt:
                 data_eleve, last_update =load_data()
         with col_fonfig[1]:
-            last_update="Non mis à jour"
-            st.markdown(f'Dernière mise à jour: {last_update}')
+            st.markdown(f"""
+                <div style="
+                    background: linear-gradient(45deg, #4b8bff, #7b5fff);
+                    padding: 15px;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                    text-align: center;
+                    font-weight: 1300;
+                    animation: pulse 2s infinite;
+                ">
+                    <span style="font-size: 5.2em;">
+                        <span style="color: #FFE5E5;">🔄 Dernière mise à jour : </span>
+                        <span style="color: #FFFFFF;">{last_update.strftime("%d/%m/%Y %H:%M:%S") if last_update else "Aucune mise à jour"}</span>
+                    </span>
+                </div>
+                
+            """, unsafe_allow_html=True)
         
-        
+        st.write("")
         data_eleve=pd.read_excel("Data.xlsx")
         data_eleve
         
