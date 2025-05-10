@@ -28,6 +28,7 @@ import warnings
 warnings.filterwarnings('ignore')
 from my_fonction import *
 from Authentification import *
+from My_Cspro_function import *
 from PIL import Image
 from pathlib import Path
 import json
@@ -655,6 +656,23 @@ def main():
         lang = set_language()
         lang1="Français" if lang=="" else lang
         
+        
+        
+        @st.cache_data()
+        def load_data():
+            download_ftp_files()
+            Unzip_All_Files()
+            df=extrat_test()
+            df.to_excel('Data.xlsx', index=False)
+            last_update=datetime.now
+            return df, last_update
+        # Test pour le chargegement et la récupération
+        
+        
+        
+        # ===================================================
+        
+        
         data=gpd.read_file("geo_data_survey.shp")
         data_rep=pd.read_excel("Data_Simulation.xlsx")
         
@@ -674,6 +692,23 @@ def main():
         logo=Image.open("Logo_INS.png")
         logo2=Image.open("Logo_FEICOM.png")
         cl_tb=st.columns([1,7,1])
+        #============ESPACE DE MISE A JOUR=======================================
+        col_fonfig=st.columns(2)
+        
+        with col_fonfig[0]:
+            upload_bt=st.button("Mise à jour")
+            if upload_bt:
+                data_de_test, last_update =load_data()
+        with col_fonfig[1]:
+            last_update="Non mis à jour"
+            st.markdown(f'Dernière mise à jour: {last_update}')
+        
+        
+        data_de_test=pd.read_excel("Data.xlsx")
+        data_de_test
+        
+        #==========================================================================
+        
         with cl_tb[0]:
             st.image(logo,caption="INSTITUT NATIONAL DE LA STATISTIQUE",width=165)
         with cl_tb[1]:

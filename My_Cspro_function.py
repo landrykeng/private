@@ -601,7 +601,54 @@ def extrat_ecole_maire(superviseur=None):
     return merged_df
 
 
-
+#importer un type de donnée pour un superviseur
+def extrat_test(superviseur=None):
+    merged_df = None
+    import_col=['`level-1-id`','s03q01', 's03q02aa', 's03q02ab' , 's03q02ba', 's03q02bb', 's03q02ca']
+    col_time=['`level-1-id`','hd','hf']
+    id_col=['`level-1-id`','ms00q19','ms00q01a']
+    
+    df_sup=df_echantillon[df_echantillon["SUP"]==superviseur]
+    if superviseur:
+        code_agent=df_sup["ENQ"].tolist()
+    for agent in [i for i in range(1113,1125)]:
+    #for agent in code_agent:
+        #fichier="extracted_data/"+str(type) + str(agent) + ".csdb"
+        fichier="extracted_data/MT" + str(agent) + ".csdb"
+        try:
+            if os.path.exists(fichier):
+                if merged_df is None:
+                    
+                    df_sec = lire_csdb(csdb_path=fichier ,table_name='sect03',columns=import_col)
+                    df_time=lire_csdb(csdb_path=fichier,table_name='mfin',columns=col_time)
+                    df_id=lire_csdb(csdb_path=fichier,table_name='level',columns=id_col)
+                    
+                    final_df=pd.merge(df_sec,df_time,on="level-1-id",how="inner")
+                    final_df=pd.merge(final_df,df_id,on="level-1-id",how="inner")
+                                        
+                    merged_df = final_df
+                else:
+                    
+                    df_sec = lire_csdb(csdb_path=fichier ,table_name='sect03',columns=import_col)
+                    df_time=lire_csdb(csdb_path=fichier,table_name='mfin',columns=col_time)
+                    df_id=lire_csdb(csdb_path=fichier,table_name='level',columns=id_col)
+                    
+                    final_df=pd.merge(df_sec,df_time,on="level-1-id",how="inner")
+                    final_df=pd.merge(final_df,df_id,on="level-1-id",how="inner")
+                                        
+                    temp_df = final_df
+                    
+                    if temp_df is not None:
+                        merged_df = pd.concat([merged_df, temp_df], ignore_index=True)
+        except Exception as e:
+            print(f"Error processing file {fichier}: {str(e)}")
+            continue
+        other_file=fichier + ".lst"
+        os.remove(fichier)
+        os.remove(other_file)
+        merged_df["Type"]="Test"
+        
+    return merged_df
 
 
 
