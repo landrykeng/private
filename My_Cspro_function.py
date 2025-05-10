@@ -6,6 +6,7 @@ import glob
 from ftplib import FTP
 import numpy as np
 import zipfile
+import streamlit as st
 
 df_echantillon=pd.read_excel("ECHANTILLON.xlsx",sheet_name="AGENT")
 
@@ -78,18 +79,18 @@ dico_eleve_enseignant={
     1005071: 'école publique de NAGHAM-NJIGOUMBE',
     1101011: "école publique d'ABELONG",
     1102021: "école publique Bilingue d'Efoulan"},
-    "Region":{1: 'ADAMAOUA',
-    2: 'CENTRE',
-    3: 'CENTRE',
-    4: 'EST',
-    5: 'EXTREME-NORD',
-    6: 'LITTORAL',
-    7: 'LITTORAL',
-    8: 'NORD',
-    9: 'NORD-OUEST',
-    10: 'OUEST',
-    11: 'SUD',
-    12: 'SUD-OUEST'},
+    "Région":{1: 'Adamaoua',
+    2: 'Centre',
+    3: 'Centre',
+    4: 'Est',
+    5: 'Extrême-Nord',
+    6: 'Littoral',
+    7: 'Littoral',
+    8: 'Nord',
+    9: 'Nord-Ouest',
+    10: 'Ouest',
+    11: 'Sud',
+    12: 'Sud-Ouest'},
     "Departement":{ 10101: 'NGAOUNDAL',
     10202: 'KONTCHA',
     10203: 'TIGNERE',
@@ -149,7 +150,7 @@ dico_eleve_enseignant={
 
 dico_maire={
     "Etablissement":dico_eleve_enseignant['Etablissement'],
-    "Region": dico_eleve_enseignant['Region'],
+    "Région": dico_eleve_enseignant['Région'],
     "Departement":dico_eleve_enseignant['Departement'],
     "Commune":{10101: "NGAOUNDAL",
     10202: "KONTCHA",
@@ -202,7 +203,101 @@ dico_maire={
     110101: "DJOUM",
     110202: "EFOULAN"}}
 
+dico_colonne_ens={
+                #Enseignant
+              "level-1-id":"ID",
+              "s00q00":"Etablissement",
+              "s00q01":"Région",
+              "s00q02":"Département",
+              "s00q03":"Arrondissement",
+              "s00q04":"Localité",
+              "s00q10":"Superviseur",
+              "s00q11":"Controleur",
+              "s00q12":"Enqueteur",
+              "s00q13":"Date",
+              "s00q17":"Résultat",
+              "s00q17x":"Autre Résultat",
+              "s00q17a":"Disponibilité",
+              "g21a":"Longitude",
+              "g21b":"Latitude",
+              "hd":"Heure debut",
+              "hf":"Heure fin",}
 
+
+#Mairie
+dico_colonne_maire={"level-1-id":"ID",
+                    "ms00q00":"Etablissement",
+              "ms00q01":"Région",
+              "ms00q02":"Département",
+              "ms00q03":"Arrondissement",
+              "ms00q0n":"Localité",
+              "ms00q07":"Superviseur",
+              "ms00q08":"Controleur",
+              "ms00q09":"Enqueteur",
+              "ms00q10":"Date",
+              "ms00q14":"Résultat",
+              "ms00q14x":"Autre Résultat",
+              "ms00q14a":"Disponibilité",
+              "mg21a":"Longitude",
+              "mg21b":"Latitude",
+              "mhd":"Heure debut",
+              "mhf":"Heure fin",}
+              
+#Ecole maire
+dico_colonne_ec={"level-1-id":"ID",
+                 "ecs00q00":"Etablissement",
+              "ecs01q03":"Code Commune",
+              "ecs00q01":"Région",
+              "ecs00q02":"Département",
+              "ecs00q03":"Arrondissement",
+              "ecs00q03n":"Commune",
+              "ecs00q07":"Superviseur",
+              "ecs00q08":"Controleur",
+              "ecs00q09":"Enqueteur",
+              "ecs00q10":"Date",
+              "ecs00q14":"Résultat",
+              "ecs00q14x":"Autre Résultat",
+              "ecs00q14a":"Disponibilité",
+              "echd":"Heure debut",
+              "echf":"Heure fin",}
+              
+#Chefferie
+dico_colonne_ch={"level-1-id":"ID",
+                 "as00q00":"Etablissement",
+              "as00q01":"Région",
+              "as00q02":"Département",
+              "as00q03":"Arrondissement",
+              "as00q04":"Localité",
+              "as00q08":"Superviseur",
+              "as00q09":"Controleur",
+              "as00q10":"Enqueteur",
+              "as00q11":"Date",
+              "as00q15":"Résultat",
+              "as00q15x":"Autre Résultat",
+              "as00q15a":"Disponibilité",
+              "ag21a":"Longitude",
+              "ag21b":"Latitude",
+              "ahd":"Heure debut",
+              "ahf":"Heure fin",}
+              
+#Elève
+dico_colonne_eleve={"level-1-id":"ID",
+                    "es00q00":"Etablissement",
+              "es00q01":"Région",
+              "es00q02":"Département",
+              "es00q03":"Arrondissement",
+              "es00q04":"Localité",
+              "es00q10":"Superviseur",
+              "es00q11":"Controleur",
+              "es00q12":"Enqueteur",
+              "es00q13":"Date",
+              "es00q17":"Résultat",
+              "es00q17x":"Autre Résultat",
+              "es00q17a":"Disponibilité",
+              "eg21a":"Longitude",
+              "eg21b":"Latitude",
+              "ehd":"Heure debut",
+              "ehf":"Heure fin",}
 
 #Conversion de du dictionnaire CSpro en dictionnaire python
 def transform_cspro_dict(dcf_path):
@@ -297,32 +392,37 @@ def annoter_dataframe(df, dico_cspro):
 
 # Délécharger le fichier .csdb depuis un serveur FTP
 def download_ftp_files():
-    ftp = FTP("217.112.80.251")
-    ftp.login(user="user_ins",passwd="123456@")  # Connexion anonyme
+    try:
+        ftp = FTP("217.112.80.251")
+        ftp.login(user="user_ins",passwd="123456@")  # Connexion anonyme
+        # Naviguer vers le dossier qui contient un fichier zip
+        ftp.cwd('/FEICOM2025/MASQUE/DATA')
+        # Create Data directory if it doesn't exist
+        data_dir = 'Data_Zip'
+        if not os.path.exists(data_dir):
+            os.makedirs(data_dir)
+        # Liste les fichiers disponibles
+        files = ftp.nlst()
+        # Download all available zip files
+        available_files = [f for f in files if f.endswith('.zip')]
+        if available_files:
+            for filename in available_files:
+                # Create the full path for saving the file in Data_Zip directory
+                local_filepath = os.path.join(data_dir, filename)
+                # Download and save each file in Data_Zip directory
+                with open(local_filepath, 'wb') as f:
+                    ftp.retrbinary(f'RETR {filename}', f.write)
+                print(f"File '{filename}' downloaded successfully to {data_dir}/")
+        else:
+            print("No .zip files found")
 
-    # Naviguer vers le dossier qui contient un fichier zip
-    ftp.cwd('/FEICOM2025/MASQUE/DATA')
-    # Create Data directory if it doesn't exist
-    data_dir = 'Data_Zip'
-    if not os.path.exists(data_dir):
-        os.makedirs(data_dir)
-    # Liste les fichiers disponibles
-    files = ftp.nlst()
-    # Download all available zip files
-    available_files = [f for f in files if f.endswith('.zip')]
-    if available_files:
-        for filename in available_files:
-            # Create the full path for saving the file in Data_Zip directory
-            local_filepath = os.path.join(data_dir, filename)
-            # Download and save each file in Data_Zip directory
-            with open(local_filepath, 'wb') as f:
-                ftp.retrbinary(f'RETR {filename}', f.write)
-            print(f"File '{filename}' downloaded successfully to {data_dir}/")
-    else:
-        print("No .zip files found")
-
-    # Fermer la connexion FTP
-    ftp.quit()
+        # Fermer la connexion FTP
+        ftp.quit()
+    except:
+        st.error("Impossible de faire la mise à jour, assurez vous d'avoir une bonne connection internet")
+        st.stop()
+        return
+    
 
 #Fonction d'extraction des données
 def unzip_data_file(zip_filename):
@@ -407,7 +507,8 @@ def extrat_enseignant(superviseur=None):
             other_file=fichier + ".lst"
             os.remove(fichier)
             os.remove(other_file)
-        merged_df["Type"]="Enseignant"
+        #merged_df["Type"]="Enseignant"
+        #merged_df=merged_df.rename(columns=dico_colonne_ens)
 
 
     return merged_df
@@ -461,7 +562,8 @@ def extrat_maire(superviseur=None):
             other_file=fichier + ".lst"
             os.remove(fichier)
             os.remove(other_file)
-        merged_df["Type"]="Maire"
+        #merged_df["Type"]="Maire"
+        #merged_df=merged_df.rename(columns=dico_colonne_maire)
 
 
     return merged_df 
@@ -515,7 +617,8 @@ def extrat_chef(superviseur=None):
             other_file=fichier + ".lst"
             os.remove(fichier)
             os.remove(other_file)
-        merged_df["Type"]="Chefferie"
+        #merged_df["Type"]="Chefferie"
+        #merged_df=merged_df.rename(columns=dico_colonne_ch)
 
     return merged_df
  
@@ -567,7 +670,9 @@ def extrat_eleve(superviseur=None):
             other_file=fichier + ".lst"
             os.remove(fichier)
             os.remove(other_file)
-        merged_df["Type"]="Elève"
+        #new_col=[dico_colonne_eleve[col] for col in merged_df.columns]
+        #merged_df.columns=new_col
+        #merged_df["Type"]="Elève"
 
     return merged_df
 
@@ -620,62 +725,11 @@ def extrat_ecole_maire(superviseur=None):
             other_file=fichier + ".lst"
             os.remove(fichier)
             os.remove(other_file)
-        merged_df["Type"]="Ecole-Maire"
+        #merged_df["Type"]="Ecole-Maire"
+        #merged_df=merged_df.rename(columns=dico_colonne_ec)
 
 
     return merged_df
-
-
-#importer un type de donnée pour un superviseur
-def extrat_test(superviseur=None):
-    merged_df = None
-    import_col=['`level-1-id`','s03q01', 's03q02aa', 's03q02ab' , 's03q02ba', 's03q02bb', 's03q02ca']
-    col_time=['`level-1-id`','hd','hf']
-    id_col=['`level-1-id`','ms00q19','ms00q01a']
-    
-    df_sup=df_echantillon[df_echantillon["SUP"]==superviseur]
-    if superviseur:
-        code_agent=df_sup["ENQ"].tolist()
-    for agent in [i for i in range(1113,1125)]:
-    #for agent in code_agent:
-        #fichier="extracted_data/"+str(type) + str(agent) + ".csdb"
-        fichier="extracted_data/MT" + str(agent) + ".csdb"
-        try:
-            if os.path.exists(fichier):
-                if merged_df is None:
-                    
-                    df_sec = lire_csdb(csdb_path=fichier ,table_name='sect03',columns=import_col)
-                    df_time=lire_csdb(csdb_path=fichier,table_name='mfin',columns=col_time)
-                    df_id=lire_csdb(csdb_path=fichier,table_name='level',columns=id_col)
-                    
-                    final_df=pd.merge(df_sec,df_time,on="level-1-id",how="inner")
-                    final_df=pd.merge(final_df,df_id,on="level-1-id",how="inner")
-                                        
-                    merged_df = final_df
-                else:
-                    
-                    df_sec = lire_csdb(csdb_path=fichier ,table_name='sect03',columns=import_col)
-                    df_time=lire_csdb(csdb_path=fichier,table_name='mfin',columns=col_time)
-                    df_id=lire_csdb(csdb_path=fichier,table_name='level',columns=id_col)
-                    
-                    final_df=pd.merge(df_sec,df_time,on="level-1-id",how="inner")
-                    final_df=pd.merge(final_df,df_id,on="level-1-id",how="inner")
-                                        
-                    temp_df = final_df
-                    
-                    if temp_df is not None:
-                        merged_df = pd.concat([merged_df, temp_df], ignore_index=True)
-        except Exception as e:
-            print(f"Error processing file {fichier}: {str(e)}")
-            continue
-        if os.path.exists(fichier):
-            other_file=fichier + ".lst"
-            os.remove(fichier)
-            os.remove(other_file)
-        merged_df["Type"]="Test"
-        
-    return merged_df
-
 
 
 

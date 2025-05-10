@@ -662,20 +662,104 @@ def main():
         def load_data():
             download_ftp_files()
             Unzip_All_Files()
-            df_eleve=extrat_eleve()
-            df_enseignant=extrat_enseignant()
-            df_maire=extrat_maire()
-            df_ec_maire=extrat_ecole_maire()
-            df_chef=extrat_chef()
             
-            df_eleve.to_excel('Data_eleve.xlsx', index=False)
-            df_enseignant.to_excel('Data_ens.xlsx', index=False)
-            df_maire.to_excel('Data_maire.xlsx', index=False)
-            df_ec_maire.to_excel('Data_ec_maire.xlsx', index=False)
-            df_chef.to_excel('Data_chef.xlsx', index=False)
+            #Maping (remplacement des codes par les valeurs) des données
+            df_eleve=extrat_eleve()
+            a=[dico_colonne_eleve[col] for col in df_eleve.columns]
+            df_eleve.columns=a
+            df_eleve["Type"]="Elève"
+            df_eleve["Région"]=df_eleve["Région"].replace(dico_eleve_enseignant["Région"])
+            df_eleve["Etablissement"]=df_eleve["Etablissement"].replace(dico_eleve_enseignant["Etablissement"])
+            df_eleve["Département"]=df_eleve["Département"].replace(dico_eleve_enseignant["Departement"])
+            df_eleve["Résultat"]=df_eleve["Résultat"].replace(dico_eleve_enseignant["Resultat"])
+            df_eleve["Date"]=pd.to_datetime(df_eleve["Date"],format='%Y%m%d',errors='coerce').dt.date
+            df_eleve=df_eleve[["Etablissement","Région","Localité","Superviseur","Controleur","Enqueteur","Date","Résultat","Autre Résultat","Disponibilité","Heure debut","Heure fin","Type"]]
+            df_eleve["Longitude"]=None
+            df_eleve["Latitude"]=None
+            
+            
+            
+            df_enseignant=extrat_enseignant()
+            a=[dico_colonne_ens[col] for col in df_enseignant.columns]
+            df_enseignant.columns=a
+            df_enseignant["Type"]="Enseignant"
+            df_enseignant["Région"]=df_enseignant["Région"].replace(dico_eleve_enseignant["Région"])
+            df_enseignant["Etablissement"]=df_enseignant["Etablissement"].replace(dico_eleve_enseignant["Etablissement"])
+            df_enseignant["Département"]=df_enseignant["Département"].replace(dico_eleve_enseignant["Departement"])
+            df_enseignant["Résultat"]=df_enseignant["Résultat"].replace(dico_eleve_enseignant["Resultat"])
+            df_enseignant["Date"]=pd.to_datetime(df_enseignant["Date"],format='%Y%m%d',errors='coerce').dt.date
+            df_enseignant=df_enseignant[["Etablissement","Région","Localité","Superviseur","Controleur","Enqueteur","Date","Résultat","Autre Résultat","Disponibilité","Heure debut","Heure fin","Type","Longitude","Latitude"]]
+            
+            
+            df_maire=extrat_maire()
+            a=[dico_colonne_maire[col] for col in df_maire.columns]
+            df_maire.columns=a
+            df_maire["Type"]="Maire"
+            df_maire["Région"]=df_maire["Région"].replace(dico_maire["Région"])
+            df_maire["Etablissement"]=df_maire["Etablissement"].replace(dico_maire["Etablissement"])
+            df_maire["Département"]=df_maire["Département"].replace(dico_maire["Departement"])
+            df_maire["Résultat"]=df_maire["Résultat"].replace(dico_eleve_enseignant["Resultat"])
+            df_maire["Date"]=pd.to_datetime(df_maire["Date"],format='%Y%m%d',errors='coerce').dt.date
+            df_maire["Etablissement"]=None
+            df_maire=df_maire[["Etablissement","Région","Localité","Superviseur","Controleur","Enqueteur","Date","Résultat","Autre Résultat","Disponibilité","Heure debut","Heure fin","Type","Longitude","Latitude"]]
+            
+            
+            df_ec_maire=extrat_ecole_maire()
+            a=[dico_colonne_ec[col] for col in df_ec_maire.columns]
+            df_ec_maire.columns=a
+            df_ec_maire["Type"]="Ecole-Maire"
+            df_ec_maire["Région"]=df_ec_maire["Région"].replace(dico_maire["Région"])
+            df_ec_maire["Etablissement"]=df_ec_maire["Etablissement"].replace(dico_maire["Etablissement"])
+            df_ec_maire["Département"]=df_ec_maire["Département"].replace(dico_maire["Departement"])
+            df_ec_maire["Résultat"]=df_ec_maire["Résultat"].replace(dico_eleve_enseignant["Resultat"])
+            df_ec_maire["Code Commune"]=df_ec_maire["Code Commune"].replace(dico_maire["Commune"])
+            df_ec_maire=df_ec_maire.rename(columns={"Code Commune":"Localité"})
+            df_ec_maire["Date"]=pd.to_datetime(df_ec_maire["Date"],format='%Y%m%d',errors='coerce').dt.date
+            df_ec_maire=df_ec_maire[["Etablissement","Région","Localité","Superviseur","Controleur","Enqueteur","Date","Résultat","Autre Résultat","Disponibilité","Heure debut","Heure fin","Type"]]
+            df_ec_maire["Longitude"]=None
+            df_ec_maire["Latitude"]=None
+            
+            
+            df_chef=extrat_chef()
+            a=[dico_colonne_ch[col] for col in df_chef.columns]
+            df_chef.columns=a
+            df_chef["Type"]="Chefferie"
+            df_chef["Région"]=df_chef["Région"].replace(dico_maire["Région"])
+            df_chef["Etablissement"]=df_chef["Etablissement"].replace(dico_maire["Etablissement"])
+            df_chef["Département"]=df_chef["Département"].replace(dico_maire["Departement"])
+            df_chef["Résultat"]=df_chef["Résultat"].replace(dico_eleve_enseignant["Resultat"])
+            df_chef["Date"]=pd.to_datetime(df_chef["Date"],format='%Y%m%d',errors='coerce').dt.date
+            df_chef=df_chef[["Etablissement","Région","Localité","Superviseur","Controleur","Enqueteur","Date","Résultat","Autre Résultat","Disponibilité","Heure debut","Heure fin","Type","Longitude","Latitude"]]
+            
+            final_df=pd.concat([df_chef,df_ec_maire,df_maire,df_enseignant,df_eleve],ignore_index=True)
+            
+            final_df.to_excel('DataGood.xlsx', index=False)
+            
+            #fusion avec le shape file
+            
+            data_shp=gpd.read_file("Cameroun.shp")
+            region_mapping = {
+                                'ADAMAOUA': 'Adamaoua',
+                                'CENTRE': 'Centre',
+                                'EST': 'Est',
+                                'EXTREME-NORD': 'Extrême-Nord',
+                                'LITTORAL': 'Littoral',
+                                'NORD': 'Nord',
+                                'NORD-OUEST': 'Nord-Ouest',
+                                'OUEST': 'Ouest',
+                                'SUD': 'Sud',
+                                'SUD-OUEST': 'Sud-Ouest'
+                            }
+            
+            data_shp['Nom_Régio']=data_shp['Nom_Régio'].replace(region_mapping)
+            data_shp=data_shp[["Nom_Régio", "geometry"]]
+            data_shp=data_shp.rename(columns={"Nom_Régio":"Région"})  
+            geo_df=data_shp.merge(final_df, on="Région", how="inner")
+            geo_df=gpd.GeoDataFrame(geo_df, geometry="geometry")
+            geo_df.to_file("geo_data.shp")
             
             last_update=datetime.now()
-            return df_eleve, df_enseignant, df_maire, df_ec_maire ,df_chef , last_update
+            return final_df, geo_df,  last_update
         # Test pour le chargegement et la récupération
         
         
@@ -684,7 +768,15 @@ def main():
         
         
         data=gpd.read_file("geo_data_survey.shp")
+        All_data=pd.read_excel("DataGood.xlsx")
         data_rep=pd.read_excel("Data_Simulation.xlsx")
+        geo_data=gpd.read_file("geo_data.shp")
+        
+        st.write("Bonne base")
+        All_data
+        
+        st.write("Données Géospatiales")
+        geo_data
         
         # Create a dictionary of dictionaries
         role_counts = {
@@ -702,6 +794,7 @@ def main():
         logo=Image.open("Logo_INS.png")
         logo2=Image.open("Logo_FEICOM.png")
         cl_tb=st.columns([1,7,1])
+        
         #============ESPACE DE MISE A JOUR=======================================
         col_fonfig=st.columns(2)
         last_update=None
@@ -709,7 +802,7 @@ def main():
             upload_bt=st.button("Mise à jour")
             if upload_bt:
                 with st.spinner("Téléchargement des nouvelle donnée...",show_time=True):
-                    df_eleve, df_enseignant, df_maire, df_ec_maire ,df_chef , last_update =load_data()
+                    All_data, geo_data, last_update =load_data()
                     st.success("Mise à joue effectuée.")
         with col_fonfig[1]:
             st.markdown(f"""
@@ -730,18 +823,9 @@ def main():
                 
             """, unsafe_allow_html=True)
         
-        st.write("")
-        df_eleve=pd.read_excel("Data_eleve.xlsx")
-        df_enseignant=pd.read_excel("Data_ens.xlsx")
-        df_maire=pd.read_excel("Data_maire.xlsx")
-        df_ec_maire=pd.read_excel("Data_ec_maire.xlsx")
-        df_chef=pd.read_excel("Data_chef.xlsx")
         
-        df_eleve
-        df_maire
-        df_ec_maire
-        df_enseignant
-        df_chef
+        
+        
         
         #==========================================================================
         
