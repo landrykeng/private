@@ -399,9 +399,10 @@ def extrat_enseignant(superviseur=None):
             print(f"Error processing file {fichier}: {str(e)}")
             continue
         
-        other_file=fichier + ".lst"
-        os.remove(fichier)
-        os.remove(other_file)
+        if os.path.exists(fichier):
+            other_file=fichier + ".lst"
+            os.remove(fichier)
+            os.remove(other_file)
         merged_df["Type"]="Enseignant"
 
 
@@ -448,9 +449,10 @@ def extrat_maire(superviseur=None):
             print(f"Error processing file {fichier}: {str(e)}")
             continue
         
-        other_file=fichier + ".lst"
-        os.remove(fichier)
-        os.remove(other_file)
+        if os.path.exists(fichier):
+            other_file=fichier + ".lst"
+            os.remove(fichier)
+            os.remove(other_file)
         merged_df["Type"]="Maire"
 
 
@@ -497,9 +499,10 @@ def extrat_chef(superviseur=None):
             print(f"Error processing file {fichier}: {str(e)}")
             continue
         
-        other_file=fichier + ".lst"
-        os.remove(fichier)
-        os.remove(other_file)
+        if os.path.exists(fichier):
+            other_file=fichier + ".lst"
+            os.remove(fichier)
+            os.remove(other_file)
         merged_df["Type"]="Chefferie"
 
     return merged_df
@@ -544,9 +547,10 @@ def extrat_eleve(superviseur=None):
         except Exception as e:
             print(f"Error processing file {fichier}: {str(e)}")
             continue
-        other_file=fichier + ".lst"
-        os.remove(fichier)
-        os.remove(other_file)
+        if os.path.exists(fichier):
+            other_file=fichier + ".lst"
+            os.remove(fichier)
+            os.remove(other_file)
         merged_df["Type"]="Elève"
 
     return merged_df
@@ -592,9 +596,10 @@ def extrat_ecole_maire(superviseur=None):
             print(f"Error processing file {fichier}: {str(e)}")
             continue
         
-        other_file=fichier + ".lst"
-        os.remove(fichier)
-        os.remove(other_file)
+        if os.path.exists(fichier):
+            other_file=fichier + ".lst"
+            os.remove(fichier)
+            os.remove(other_file)
         merged_df["Type"]="Ecole-Maire"
 
 
@@ -643,9 +648,10 @@ def extrat_test(superviseur=None):
         except Exception as e:
             print(f"Error processing file {fichier}: {str(e)}")
             continue
-        other_file=fichier + ".lst"
-        os.remove(fichier)
-        os.remove(other_file)
+        if os.path.exists(fichier):
+            other_file=fichier + ".lst"
+            os.remove(fichier)
+            os.remove(other_file)
         merged_df["Type"]="Test"
         
     return merged_df
