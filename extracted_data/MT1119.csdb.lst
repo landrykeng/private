@@ -1,0 +1,30 @@
+﻿Application     /storage/emulated/0/Android/data/gov.census.cspro.csentry/files/csentry/ARSEL2025/MASQUE/ENTRY/ENEO_MT.ent
+Type            ENTRY
+Input Data      <<CSPro DB>> /storage/emulated/0/Android/data/gov.census.cspro.csentry/files/csentry/ARSEL2025/MASQUE/DATA/MT1119.csdb
+
+Date            May 07, 2025
+Start Time      10:38:43
+End Time        10:52:53
+
+
+User unnumbered messages:
+
+    Line        Freq    %    Message Text                                                                          Denom
+    ----        ----  -----  ------------                                                                          -----
+     290           2      -  Votre questionnaire MT a été bien enregistré                                              -
+
+
+CSPro Executor Normal End
+------------------------------------------------------------------------------------------------------------------------
+Application     /storage/emulated/0/Android/data/gov.census.cspro.csentry/files/csentry/ARSEL2025/MASQUE/ENTRY/ENEO_MT.ent
+Type            ENTRY
+Input Data      <<CSPro DB>> /storage/emulated/0/Android/data/gov.census.cspro.csentry/files/csentry/ARSEL2025/MASQUE/DATA/MT1119.csdb
+
+Date            May 07, 2025
+Start Time      10:53:21
+End Time        11:44:56
+
+
+
+CSPro Executor Normal End
+------------------------------------------------------------------------------------------------------------------------
