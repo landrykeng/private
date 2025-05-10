@@ -799,11 +799,11 @@ def main():
         col_fonfig=st.columns(2)
         last_update=None
         with col_fonfig[0]:
-            upload_bt=st.button("Mise à jour")
+            upload_bt=st.button("Mettre à jour")
             if upload_bt:
                 with st.spinner("Téléchargement des nouvelles données...",show_time=True):
                     All_data, geo_data, last_update =load_data()
-                    st.success("Mise à joue effectuée.")
+                    st.success("Mise à jour effectuée.")
         with col_fonfig[1]:
             st.markdown(f"""
                 <div style="
