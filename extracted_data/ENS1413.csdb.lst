@@ -1,0 +1,32 @@
+﻿Application     /storage/emulated/0/Android/data/gov.census.cspro.csentry/files/csentry/FEICOM2025/MASQUE/ENTRY/ENSEIGNANT.ent
+Type            ENTRY
+Input Data      <<CSPro DB>> /storage/emulated/0/Android/data/gov.census.cspro.csentry/files/csentry/FEICOM2025/MASQUE/DATA/ENS1413.csdb
+
+Date            May 10, 2025
+Start Time      08:59:07
+End Time        09:58:02
+
+
+System messages:
+
+  Number        Freq         Message Text                                                                               
+  ------        ----         ------------                                                                               
+   88889           9         ATTENTION: Hors valeurs valides! Entrer une valeur valide pour %s%s                        
+   99990           9         Operator entered a value out of range                                                      
+
+User numbered messages:
+
+  Number        Freq    %    Message Text                                                                          Denom
+  ------        ----  -----  ------------                                                                          -----
+       1           1      -  Nom trop court                                                                            -
+      10           4      -  Vous devez sélectionner au moins une réponse                                              -
+
+User unnumbered messages:
+
+    Line        Freq    %    Message Text                                                                          Denom
+    ----        ----  -----  ------------                                                                          -----
+     437           1      -  Votre questionnaire a été bien enregistré                                                 -
+
+
+CSPro Executor Normal End
+------------------------------------------------------------------------------------------------------------------------

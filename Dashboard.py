@@ -664,7 +664,7 @@ def main():
             Unzip_All_Files()
             df=extrat_eleve()
             df.to_excel('Data.xlsx', index=False)
-            last_update=datetime.now
+            last_update=datetime.now()
             return df, last_update
         # Test pour le chargegement et la récupération
         

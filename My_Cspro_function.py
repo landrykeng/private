@@ -365,9 +365,13 @@ def extrat_enseignant(superviseur=None):
     col_time=['`level-1-id`','hd','hf']
     id_col=['`level-1-id`','s00q00']
     
-    df_sup=df_echantillon[df_echantillon["SUP"]==superviseur]
     if superviseur:
+        df_sup=df_echantillon[df_echantillon["SUP"]==superviseur]
         code_agent=df_sup["ENQ"].tolist()
+    else:
+        code_agent=df_echantillon["ENQ"].tolist()
+    
+    
     for agent in code_agent:
         fichier="extracted_data/ENS" + str(agent) + ".csdb"
         try:
@@ -415,9 +419,13 @@ def extrat_maire(superviseur=None):
     col_time=['`level-1-id`','mhd','mhf']
     id_col=['`level-1-id`','ms00q00']
     
-    df_sup=df_echantillon[df_echantillon["SUP"]==superviseur]
+    
     if superviseur:
+        df_sup=df_echantillon[df_echantillon["SUP"]==superviseur]
         code_agent=df_sup["ENQ"].tolist()
+    else:
+        code_agent=df_echantillon["ENQ"].tolist()
+    
     for agent in code_agent:
         fichier="extracted_data/MA" + str(agent) + ".csdb"
         try:
@@ -465,9 +473,13 @@ def extrat_chef(superviseur=None):
     col_time=['`level-1-id`','ahd','ahf']
     id_col=['`level-1-id`','as00q00','as00q03']
     
-    df_sup=df_echantillon[df_echantillon["SUP"]==superviseur]
     if superviseur:
+        df_sup=df_echantillon[df_echantillon["SUP"]==superviseur]
         code_agent=df_sup["ENQ"].tolist()
+    else:
+        code_agent=df_echantillon["ENQ"].tolist()
+    
+    
     for agent in code_agent:
         fichier="extracted_data/CH" + str(agent) + ".csdb"
         try:
@@ -514,9 +526,13 @@ def extrat_eleve(superviseur=None):
     col_time=['`level-1-id`','ehd','ehf']
     id_col=['`level-1-id`','es00q00']
     
-    df_sup=df_echantillon[df_echantillon["SUP"]==superviseur]
+    
     if superviseur:
+        df_sup=df_echantillon[df_echantillon["SUP"]==superviseur]
         code_agent=df_sup["ENQ"].tolist()
+    else:
+        code_agent=df_echantillon["ENQ"].tolist()
+        
     for agent in code_agent:
         fichier="extracted_data/ELE" + str(agent) + ".csdb"
         try:
@@ -562,9 +578,13 @@ def extrat_ecole_maire(superviseur=None):
     col_time=['`level-1-id`','echd','echf']
     id_col=['`level-1-id`','ecs01q03','ecs00q00']
     
-    df_sup=df_echantillon[df_echantillon["SUP"]==superviseur]
     if superviseur:
+        df_sup=df_echantillon[df_echantillon["SUP"]==superviseur]
         code_agent=df_sup["ENQ"].tolist()
+    else:
+        code_agent=df_echantillon["ENQ"].tolist()
+    
+    
     for agent in code_agent:
         fichier="extracted_data/ECMA" + str(agent) + ".csdb"
         try:
