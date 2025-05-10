@@ -374,8 +374,8 @@ def extrat_enseignant(superviseur=None):
             if os.path.exists(fichier):
                 if merged_df is None:
                     
-                    df_sec = lire_csdb(csdb_path=fichier ,table_name='sect03',columns=import_col)
-                    df_time=lire_csdb(csdb_path=fichier,table_name='mfin',columns=col_time)
+                    df_sec = lire_csdb(csdb_path=fichier ,table_name='sect00',columns=import_col)
+                    df_time=lire_csdb(csdb_path=fichier,table_name='fin',columns=col_time)
                     df_id=lire_csdb(csdb_path=fichier,table_name='level',columns=id_col)
                     
                     final_df=pd.merge(df_sec,df_time,on="level-1-id",how="inner")
@@ -384,8 +384,8 @@ def extrat_enseignant(superviseur=None):
                     merged_df = final_df
                 else:
                     
-                    df_sec = lire_csdb(csdb_path=fichier ,table_name='sect03',columns=import_col)
-                    df_time=lire_csdb(csdb_path=fichier,table_name='mfin',columns=col_time)
+                    df_sec = lire_csdb(csdb_path=fichier ,table_name='sect00',columns=import_col)
+                    df_time=lire_csdb(csdb_path=fichier,table_name='fin',columns=col_time)
                     df_id=lire_csdb(csdb_path=fichier,table_name='level',columns=id_col)
                     
                     final_df=pd.merge(df_sec,df_time,on="level-1-id",how="inner")
@@ -424,7 +424,7 @@ def extrat_maire(superviseur=None):
             if os.path.exists(fichier):
                 if merged_df is None:
                     
-                    df_sec = lire_csdb(csdb_path=fichier ,table_name='sect03',columns=import_col)
+                    df_sec = lire_csdb(csdb_path=fichier ,table_name='msect00',columns=import_col)
                     df_time=lire_csdb(csdb_path=fichier,table_name='mfin',columns=col_time)
                     df_id=lire_csdb(csdb_path=fichier,table_name='level',columns=id_col)
                     
@@ -434,7 +434,7 @@ def extrat_maire(superviseur=None):
                     merged_df = final_df
                 else:
                     
-                    df_sec = lire_csdb(csdb_path=fichier ,table_name='sect03',columns=import_col)
+                    df_sec = lire_csdb(csdb_path=fichier ,table_name='msect00',columns=import_col)
                     df_time=lire_csdb(csdb_path=fichier,table_name='mfin',columns=col_time)
                     df_id=lire_csdb(csdb_path=fichier,table_name='level',columns=id_col)
                     
@@ -474,8 +474,8 @@ def extrat_chef(superviseur=None):
             if os.path.exists(fichier):
                 if merged_df is None:
                     
-                    df_sec = lire_csdb(csdb_path=fichier ,table_name='sect03',columns=import_col)
-                    df_time=lire_csdb(csdb_path=fichier,table_name='mfin',columns=col_time)
+                    df_sec = lire_csdb(csdb_path=fichier ,table_name='asect00',columns=import_col)
+                    df_time=lire_csdb(csdb_path=fichier,table_name='afin',columns=col_time)
                     df_id=lire_csdb(csdb_path=fichier,table_name='level',columns=id_col)
                     
                     final_df=pd.merge(df_sec,df_time,on="level-1-id",how="inner")
@@ -484,8 +484,8 @@ def extrat_chef(superviseur=None):
                     merged_df = final_df
                 else:
                     
-                    df_sec = lire_csdb(csdb_path=fichier ,table_name='sect03',columns=import_col)
-                    df_time=lire_csdb(csdb_path=fichier,table_name='mfin',columns=col_time)
+                    df_sec = lire_csdb(csdb_path=fichier ,table_name='asect00',columns=import_col)
+                    df_time=lire_csdb(csdb_path=fichier,table_name='afin',columns=col_time)
                     df_id=lire_csdb(csdb_path=fichier,table_name='level',columns=id_col)
                     
                     final_df=pd.merge(df_sec,df_time,on="level-1-id",how="inner")
@@ -523,8 +523,8 @@ def extrat_eleve(superviseur=None):
             if os.path.exists(fichier):
                 if merged_df is None:
                     
-                    df_sec = lire_csdb(csdb_path=fichier ,table_name='sect03',columns=import_col)
-                    df_time=lire_csdb(csdb_path=fichier,table_name='mfin',columns=col_time)
+                    df_sec = lire_csdb(csdb_path=fichier ,table_name='esect00',columns=import_col)
+                    df_time=lire_csdb(csdb_path=fichier,table_name='efin',columns=col_time)
                     df_id=lire_csdb(csdb_path=fichier,table_name='level',columns=id_col)
                     
                     final_df=pd.merge(df_sec,df_time,on="level-1-id",how="inner")
@@ -533,8 +533,8 @@ def extrat_eleve(superviseur=None):
                     merged_df = final_df
                 else:
                     
-                    df_sec = lire_csdb(csdb_path=fichier ,table_name='sect03',columns=import_col)
-                    df_time=lire_csdb(csdb_path=fichier,table_name='mfin',columns=col_time)
+                    df_sec = lire_csdb(csdb_path=fichier ,table_name='esect00',columns=import_col)
+                    df_time=lire_csdb(csdb_path=fichier,table_name='efin',columns=col_time)
                     df_id=lire_csdb(csdb_path=fichier,table_name='level',columns=id_col)
                     
                     final_df=pd.merge(df_sec,df_time,on="level-1-id",how="inner")
@@ -571,8 +571,8 @@ def extrat_ecole_maire(superviseur=None):
             if os.path.exists(fichier):
                 if merged_df is None:
                     
-                    df_sec = lire_csdb(csdb_path=fichier ,table_name='sect03',columns=import_col)
-                    df_time=lire_csdb(csdb_path=fichier,table_name='mfin',columns=col_time)
+                    df_sec = lire_csdb(csdb_path=fichier ,table_name='ecsect00',columns=import_col)
+                    df_time=lire_csdb(csdb_path=fichier,table_name='ecfin',columns=col_time)
                     df_id=lire_csdb(csdb_path=fichier,table_name='level',columns=id_col)
                     
                     final_df=pd.merge(df_sec,df_time,on="level-1-id",how="inner")
@@ -581,8 +581,8 @@ def extrat_ecole_maire(superviseur=None):
                     merged_df = final_df
                 else:
                     
-                    df_sec = lire_csdb(csdb_path=fichier ,table_name='sect03',columns=import_col)
-                    df_time=lire_csdb(csdb_path=fichier,table_name='mfin',columns=col_time)
+                    df_sec = lire_csdb(csdb_path=fichier ,table_name='ecsect00',columns=import_col)
+                    df_time=lire_csdb(csdb_path=fichier,table_name='ecfin',columns=col_time)
                     df_id=lire_csdb(csdb_path=fichier,table_name='level',columns=id_col)
                     
                     final_df=pd.merge(df_sec,df_time,on="level-1-id",how="inner")

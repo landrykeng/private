@@ -662,7 +662,7 @@ def main():
         def load_data():
             download_ftp_files()
             Unzip_All_Files()
-            df=extrat_test()
+            df=extrat_eleve()
             df.to_excel('Data.xlsx', index=False)
             last_update=datetime.now
             return df, last_update
@@ -698,14 +698,14 @@ def main():
         with col_fonfig[0]:
             upload_bt=st.button("Mise à jour")
             if upload_bt:
-                data_de_test, last_update =load_data()
+                data_eleve, last_update =load_data()
         with col_fonfig[1]:
             last_update="Non mis à jour"
             st.markdown(f'Dernière mise à jour: {last_update}')
         
         
-        data_de_test=pd.read_excel("Data.xlsx")
-        data_de_test
+        data_eleve=pd.read_excel("Data.xlsx")
+        data_eleve
         
         #==========================================================================
         
