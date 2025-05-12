@@ -968,8 +968,8 @@ def main():
                     fond_color= "orange"
                 else:
                     fond_color= "blues"
-                #data_to_plot_cart=data[data["Type_Quest"]==type_questionnaire]
-            make_school_map_test(data,opacity=opacity,style_carte=style_carte,palet_color="blues",width=780, height=1000)
+                data_to_plot_cart=data[data["Type_Quest"]==type_questionnaire]
+                make_school_map_test(data_to_plot_cart,opacity=opacity,style_carte=style_carte,palet_color=fond_color,width=780, height=1000)
         with tabs[1]:
             col1=st.columns([1,1])
             with col1[0]:

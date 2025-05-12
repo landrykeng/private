@@ -281,12 +281,12 @@ def display_single_metric_advanced(label, value, delta, unit="", caption="", col
                 {label}
             </h4>
             <div style="font-size: 19px; font-weight: bold; color: {color['text']};">
-                <h1 class="dashboard-main-title", margin-bottom: 1px; style="font-family: Arial, sans-serif; font-weight: bold; position: relative; top: 0px;"> 
+                <h2 class="dashboard-main-title", margin-bottom: 1px; style="font-family: Arial, sans-serif; font-weight: bold; position: relative; top: 0px;"> 
                 Nombre: {value} {unit}
-                </h1>
+                </h2>
             </div>
-            <div style="font-size: 15.5em; color: {color['delta_pos'] if delta >= 0 else color['delta_neg']};">
-                <h3>Progression: {'▲' if delta >= 0 else '▼'} {abs(delta)} % </h3>
+            <div style="font-size: 15.5em; color: {color['text'] if delta >= 0 else color['delta_neg']};">
+                <h3>Progress: {'▲' if delta >= 0 else '▼'} {abs(delta)} % </h3>
             </div>
         </div>
         """,
@@ -3731,24 +3731,24 @@ def make_school_map(df, style_carte="OpenStreetMap", palet_color="blues", opacit
     # Définition des catégories d'éligibilité et des couleurs associées
     questionnaire_categories = {
         "Enseignant": {"color": ["#D6182A", "#EF7E5F", "#381FF5"], "size_factor": 3, "opacity": 0.75},
-        "Enfant": {"color": [f"rgb({255*(19-i)/19}, 0 , {255*i/19}" for i in range(18)], "size_factor": 7, "opacity": 0.7},
+        "Elève": {"color": [f"rgb({255*(19-i)/19}, 0 , {255*i/19}" for i in range(18)], "size_factor": 7, "opacity": 0.7},
     }
     
     # Préparation des données par statut d'éligibilité
     dfs_by_questinaire = {}
     for category in questionnaire_categories.keys():
-        geo_data = df_clean[df_clean["Type_Quest"] == category]
+        geo_data = df_clean[df_clean["Type"] == category]
         
         if not geo_data.empty:
-            dfs_by_questinaire[category] = geo_data.groupby("École").agg({
-                'Type_Quest': 'size',
+            dfs_by_questinaire[category] = geo_data.groupby("Etablissement").agg({
+                'Type': 'size',
                 'Latitude': 'first',
                 'Longitude': 'first'
-            }).rename(columns={'Type_Quest': 'nb_questionnaire'})
+            }).rename(columns={'Type': 'nb_questionnaire'})
             dfs_by_questinaire[category]["Qrt"] = dfs_by_questinaire[category].index
             # S'assurer qu'il n'y a pas de NaN dans les coordonnées agrégées
             dfs_by_questinaire[category] = dfs_by_questinaire[category].dropna(subset=['Latitude', 'Longitude'])
-
+            #École
     # Préparation des données pour la choroplèthe par arrondissement
     df_chlph = df_clean.groupby("Région").agg({
         'Région': 'size',
@@ -3770,11 +3770,11 @@ def make_school_map(df, style_carte="OpenStreetMap", palet_color="blues", opacit
             df_chlph = df_chlph.to_crs(epsg=4326)
 
     # Total des candidats par quartier
-    df_pts = df_clean.groupby("École").agg({
-        'École': 'size',
+    df_pts = df_clean.groupby("Etablissement").agg({
+        'Etablissement': 'size',
         'Latitude': 'first',
         'Longitude': 'first'
-    }).rename(columns={'École': 'nb_questionnaire'})
+    }).rename(columns={'Etablissement': 'nb_questionnaire'})
     df_pts["ecole"] = df_pts.index
     # S'assurer qu'il n'y a pas de NaN dans les coordonnées agrégées
     df_pts = df_pts.dropna(subset=['Latitude', 'Longitude'])
@@ -4007,6 +4007,766 @@ def make_school_map(df, style_carte="OpenStreetMap", palet_color="blues", opacit
 
 
 def make_school_map2(df, style_carte="OpenStreetMap", palet_color="blues", opacity=0.8, width=700, height=600):
+    """
+    Fonction pour créer une carte choroplèthe interactive montrant la distribution des candidats
+    par statut d'éligibilité à travers différents quartiers et arrondissements, en utilisant Folium.
+    
+    Parameters:
+    -----------
+    df : GeoDataFrame
+        DataFrame contenant les données géospatiales des candidats
+    style_carte : str, default="OpenStreetMap"
+        Style de fond de carte Folium (options: "OpenStreetMap", "cartodbpositron", "cartodbdark_matter", etc.)
+    palet_color : str, default="Blues"
+        Palette de couleurs pour la choroplèthe (options: "Blues", "Reds", "Greens", "YlOrRd", etc.)
+    opacity : float, default=0.8
+        Opacité des polygones de la choroplèthe (0-1)
+    width : int, default=700
+        Largeur de la carte en pixels
+    height : int, default=600
+        Hauteur de la carte en pixels
+    """
+    
+    
+    # Nettoyer les données en supprimant les lignes avec des coordonnées NaN
+    df_clean = df.dropna(subset=['Latitude', 'Longitude']).copy()
+    
+    # Définition des catégories d'éligibilité et des couleurs associées
+    questionnaire_categories = {
+        "Enseignant": {"color": "#0073E6", "size_factor": 3, "opacity": 0.75},
+        "Elève": {"color": "#B3D9FF", "size_factor": 7, "opacity": 0.7},
+    }
+    #École
+    # Préparation des données par Etablissement
+    dfs_by_questinaire = {}
+    for category in questionnaire_categories.keys():
+        geo_df = df_clean[df_clean["Type"] == category]
+        
+        if not geo_df.empty:
+            dfs_by_questinaire[category] = geo_df.groupby("Etablissement").agg({
+                'Type': 'size',
+                'Latitude': 'first',
+                'Total_ense':'sum',
+                'Total_enfa':'sum',
+                'Longitude': 'first'
+            }).rename(columns={'Type': 'nb_questionnaire'})
+            dfs_by_questinaire[category]["Qrt"] = dfs_by_questinaire[category].index
+            # S'assurer qu'il n'y a pas de NaN dans les coordonnées agrégées
+            dfs_by_questinaire[category] = dfs_by_questinaire[category].dropna(subset=['Latitude', 'Longitude'])
+
+    # Préparation des données pour la choroplèthe par arrondissement
+    df_chlph = df_clean.groupby("Région").agg({
+        'Région': 'size',
+        'geometry': 'first',
+        'Total_ense':'sum',
+        'Total_enfa':'sum',
+        'Reg_ens':'first',
+        'Reg_enf':'first',
+        'Latitude': 'first',
+        'Longitude': 'first'
+    }).rename(columns={'Région': 'nb_questionnaire'})
+    df_chlph["reg"] = df_chlph.index
+    df_chlph["Evolution"] = df_chlph["nb_questionnaire"]/ (df_chlph["Reg_ens"] + df_chlph["Reg_enf"])
+    # S'assurer qu'il n'y a pas de NaN dans les coordonnées agrégées
+    df_chlph = df_chlph.dropna(subset=['Latitude', 'Longitude'])
+    df_chlph = gpd.GeoDataFrame(df_chlph, geometry='geometry')
+    
+    # S'assurer que le CRS est défini - Utiliser EPSG:4326 (WGS84) pour compatibilité avec Folium
+    if df_chlph.crs is None:
+        df_chlph.set_crs(epsg=4326, inplace=True)
+    else:
+        # Si un CRS est déjà défini mais différent de WGS84, le convertir
+        if df_chlph.crs != 'EPSG:4326':
+            df_chlph = df_chlph.to_crs(epsg=4326)
+
+    # Total des candidats par quartier
+    df_pts = df_clean.groupby("Etablissement").agg({
+        'Etablissement': 'size',
+        'Total_ense':'sum',
+        'Total_enfa':'sum',
+        'Latitude': 'first',
+        'Longitude': 'first'
+    }).rename(columns={'Etablissement': 'nb_questionnaire'})
+    df_pts["ecole"] = df_pts.index
+    # S'assurer qu'il n'y a pas de NaN dans les coordonnées agrégées
+    df_pts = df_pts.dropna(subset=['Latitude', 'Longitude'])
+    
+    # Vérifier si df_pts est vide après filtrage
+    if df_pts.empty:
+        st.error("Aucune coordonnée valide trouvée dans les données. Impossible de créer la carte.")
+        return None
+    
+    # Création de la carte Folium
+    center_lat = df_pts["Latitude"].mean()+0.9
+    center_lon = df_pts["Longitude"].mean()+0.5
+    
+    # Dictionnaire de correspondance entre les styles dans votre fonction originale et ceux de Folium
+    tile_styles = {
+        "carto-positron": "cartodbpositron",
+        "carto-darkmatter": "cartodbdark_matter",
+        "open-street-map": "OpenStreetMap",
+        "CartoDB positron": "cartodbpositron", 
+        "CartoDB dark_matter": "cartodbdark_matter"
+    }
+    
+    # Utiliser le style approprié ou OpenStreetMap par défaut
+    actual_style = tile_styles.get(style_carte, style_carte)
+    
+    # Création de la carte avec le style approprié
+    m = folium.Map(
+        location=[center_lat, center_lon],
+        zoom_start=6.5,
+        tiles=actual_style,
+        width=width,
+        height=height,
+        max_lat=df_pts["Latitude"].max(),
+        min_lat=df_pts["Latitude"].min(),
+        max_lon=df_pts["Longitude"].max(),
+        min_lon=df_pts["Longitude"].min()
+        
+        
+    )
+    
+    # Ajout de la couche choroplèthe pour les Régions
+    # Création d'une échelle de couleur avec la bonne classe de branca.colormap
+    if palet_color == "blues":
+        color_range = ['#f7fbff', '#08519c']
+    elif palet_color == "reds":
+        color_range = ['#fee5d9', '#a50f15']
+    elif palet_color == "greens":
+        color_range = ['#edf8e9', '#006d2c']
+    elif palet_color == "viridis":
+        color_range = ['#fde725', '#440154']
+    elif palet_color == "orange":
+        color_range = ['#fee8c8', '#e34a33']
+    elif palet_color == "yellow":
+        color_range = ['#ffffb2', '#bd0026']
+    elif palet_color == "purple":
+        color_range = ['#f7f4f9', '#756bb1']
+    elif palet_color == "pink":
+        color_range = ['#f7f3f8', '#762a83']
+    elif palet_color == "brown":
+        color_range = ['#f5f5f0', '#8c510a']
+    else:
+        color_range = ['#f7fbff', '#08519c']  # Default to Blues
+    
+    # Création des clusters uniquement pour les arrondissements
+    region_cluster = MarkerCluster(name="Région").add_to(m)
+    
+    if not df_chlph.empty:
+        colormap = cm.LinearColormap(
+            colors=color_range, 
+            vmin=0,
+            #vmin=df_chlph["nb_questionnaire"].min(),
+            #vmax=df_chlph["nb_questionnaire"].max(),
+            vmax=1,
+            caption="Taux d'évolution",
+            max_labels=15
+        )
+        
+        # Convertir le GeoDataFrame en GeoJSON
+        geo_json_data = df_chlph.__geo_interface__
+        # Ajout des polygones des arrondissements en utilisant le GeoJSON préparé
+        """
+        folium.GeoJson(
+            geo_json_data,
+            style_function=lambda feature: {
+            'fillColor': colormap(feature['properties']['Evolution']),
+            'color': 'white',
+            'weight': 0.5,
+            'fillOpacity': opacity
+            },
+            tooltip=folium.GeoJsonTooltip(
+            fields=['reg', 'nb_questionnaire', 'Total_ense', 'Total_enfa'],
+            aliases=['Région:', 'Nombre de Questionnaire:', 'Total Enseignants:', 'Total Enfants:'],
+            style="background-color: white; color: #333333; font-family: arial; font-size: 14px; padding: 10px;",
+            labels=True,
+            sticky=True,
+            localize=True,
+            toLocaleString=True,
+            formatters={
+                'Total_enfa': lambda x: f"{x} / {df_chlph.loc[df_chlph['reg'] == x, 'Reg_enf'].values[0]}",
+                'Total_ense': lambda x: f"{x} / {df_chlph.loc[df_chlph['reg'] == x, 'Reg_ens'].values[0]}"
+            }
+            )
+        ).add_to(m)
+        """
+        folium.GeoJson(
+            geo_json_data,
+            style_function=lambda feature: {
+            'fillColor': colormap(feature['properties']['Evolution']),
+            'color': 'white',
+            'weight': 0.5,
+            'fillOpacity': opacity
+            },
+            tooltip=folium.GeoJsonTooltip(
+            fields=['reg', 'nb_questionnaire', 'Total_ense', 'Total_enfa'],
+            aliases=['Région:', 'Nombre de Questionnaire:', 'Total Enseignants:', 'Total Enfants:'],
+            style="background-color: white; color: #333333; font-family: arial; font-size: 14px; padding: 10px;"
+            )
+        ).add_to(m)
+        
+        # Ajout des polygones des arrondissements en utilisant le GeoJSON préparé
+       
+        # Ajout des étiquettes d'arrondissement et des marqueurs au cluster d'arrondissements
+        for idx, row in df_chlph.iterrows():
+            # Étiquettes des pourcentages d'évolution
+            folium.Marker(
+                location=[row['Latitude'], row['Longitude']],
+                icon=folium.DivIcon(
+                    icon_size=(150, 40),
+                    icon_anchor=(75, 28),
+                    html=f'<div style="font-size: 25px; font-weight: bold; text-align: center">{100*round(row["Evolution"],2)} %</div>'
+                )
+            ).add_to(m)
+            
+            # Marqueurs d'arrondissement pour le cluster
+            folium.Marker(
+                location=[row['Latitude'], row['Longitude']],
+                popup=f"<b>Région {row['reg']}</b><br>Total Questionnaire: <b>{row['nb_questionnaire']}</b>",
+                icon=folium.Icon(color='blue')
+            ).add_to(region_cluster)
+        
+        # Ajout de la légende de couleur - Déplacée sur le côté gauche
+        colormap.add_to(m)
+        # Modifier la position de la légende de couleur à gauche via CSS
+        colormap_css = """
+        <style>
+        .leaflet-right .leaflet-control {
+            /* Cacher la légende à droite */
+            display: none;
+        }
+        
+        /* Repositionner la légende à gauche */
+        .leaflet-left .info.legend {
+            margin-left: 10px;
+            margin-bottom: 10px;
+        }
+        </style>
+        """
+        # Ajout du CSS à la carte
+        m.get_root().html.add_child(folium.Element(colormap_css))
+        
+        # Copier la légende à gauche
+        
+
+    # Fonction pour calculer la taille du cercle en fonction du nombre de candidats
+    def calculate_radius(count, max_count, base_size=5):
+        return base_size * np.sqrt(count / max_count * 100)
+    
+    max_count = df_pts["nb_questionnaire"].max() if not df_pts.empty else 1
+    
+        
+    # Ajout des marqueurs pour chaque catégorie d'éligibilité (directement à la carte, pas de cluster)
+    for category, df_pts_cat in dfs_by_questinaire.items():
+        if df_pts_cat.empty:
+            continue
+            
+        config = questionnaire_categories[category]
+        
+        # Création d'un groupe de features pour cette catégorie
+        category_feature_group = folium.FeatureGroup(name=category)
+        
+        max_count_cat = df_pts_cat["nb_questionnaire"].max() if not df_pts_cat.empty else 1
+        #couleur des points
+        enfant_color=[f"rgb({255*(19-i)/19} , {255*i/19}, 0" for i in range(18)]
+        enseignant_color=["#D6182A", "#EF7E5F", "#228A22"]
+        
+        for idx, row in df_pts_cat.iterrows():
+            tval=18 if category=="Elève" else 3
+            radius = calculate_radius(row["nb_questionnaire"], max_count_cat, base_size=config["size_factor"]/4)
+            popup_text = f"<b>{row['Qrt']}</b><br>Questionnaire {category}: <b>{row['nb_questionnaire']} / {tval}</b>" 
+            
+            
+            folium.CircleMarker(
+                location=[row['Latitude'], row['Longitude']],
+                radius=radius,
+                color=enfant_color[row['nb_questionnaire']-1] if category == "Elève" else enseignant_color[row['nb_questionnaire']-1],
+                fill=True,
+                fill_color=enfant_color[row['nb_questionnaire']-1] if category == "Elève" else enseignant_color[row['nb_questionnaire']-1],
+                fill_opacity=0.8,
+                popup=folium.Popup(popup_text, max_width=300)
+            ).add_to(category_feature_group)
+        
+        # Ajout du groupe de features à la carte
+        category_feature_group.add_to(m)
+            
+    # Ajout du contrôle de couches (déplacer en haut à gauche)
+    layer_control = folium.LayerControl(collapsed=True, draggable=True, position='topleft')
+    layer_control.add_to(m)
+    
+    # Déplacer la légende à gauche
+    legend_html = '''
+        <div style="position: fixed; 
+                    bottom: 50px; left: 20px; 
+                    width: 220px;
+                    background-color: white;
+                    border: 2px solid grey;
+                    border-radius: 5px;
+                    z-index: 9999;
+                    font-size: 14px;
+                    padding: 10px;
+                    opacity: 0.9;">
+            <div style="text-align: center; margin-bottom: 5px;"><b>Légende des points</b></div>
+    '''
+    
+    # Ajouter une entrée de légende pour les cercles totaux
+    legend_html += f'''
+        <div style="margin-bottom: 7px;">
+            <div style="display: inline-block; 
+                      width: 15px; 
+                      height: 15px; 
+                      border-radius: 50%; 
+                      background-color: #003F80;
+                      margin-right: 5px;
+                      vertical-align: middle;"></div>
+            <span style="vertical-align: middle;">Total Questionnaire</span>
+        </div>
+    '''
+    
+    # Ajouter des entrées pour chaque catégorie de questionnaire
+    for category, config in questionnaire_categories.items():
+        if category in dfs_by_questinaire and not dfs_by_questinaire[category].empty:
+            legend_html += f'''
+                <div style="margin-bottom: 7px;">
+                    <div style="display: inline-block; 
+                              width: 15px; 
+                              height: 15px; 
+                              border-radius: 50%; 
+                              background-color: {config['color']};
+                              opacity: {config['opacity']};
+                              margin-right: 5px;
+                              vertical-align: middle;"></div>
+                    <span style="vertical-align: middle;">{category}</span>
+                </div>
+            '''
+    
+    # Fermer la div de la légende
+    legend_html += '''
+        </div>
+    '''
+    
+    # Ajouter la légende à la carte
+    m.get_root().html.add_child(folium.Element(legend_html))
+    
+    
+    # Ajout d'un titre - centré en haut
+    title_html = '''
+        <div style="position: fixed; 
+                    top: 10px; left: 50%; transform: translateX(-50%); 
+                    width: 600px; height: 45px; 
+                    background-color: white; border-radius: 5px;
+                    z-index: 9999; font-size: 20px; font-family: Arial;
+                    padding: 10px; text-align: center; color: #333;">
+            <b>Distribution des questionnaire par Type</b>
+        </div>
+    '''
+    m.get_root().html.add_child(folium.Element(title_html))
+    
+    # Affichage avec Streamlit
+    folium_static(m, width=width, height=height)
+
+    return m
+
+def make_school_map_folium_2(df, style_carte="OpenStreetMap", palet_color="blues", opacity=0.8, width=700, height=600):
+    """
+    Fonction pour créer une carte choroplèthe interactive montrant la distribution des candidats
+    par statut d'éligibilité à travers différents quartiers et arrondissements, en utilisant Folium.
+    
+    Parameters:
+    -----------
+    df : GeoDataFrame
+        DataFrame contenant les données géospatiales des candidats
+    style_carte : str, default="OpenStreetMap"
+        Style de fond de carte Folium (options: "OpenStreetMap", "cartodbpositron", "cartodbdark_matter", etc.)
+    palet_color : str, default="Blues"
+        Palette de couleurs pour la choroplèthe (options: "Blues", "Reds", "Greens", "YlOrRd", etc.)
+    opacity : float, default=0.8
+        Opacité des polygones de la choroplèthe (0-1)
+    width : int, default=700
+        Largeur de la carte en pixels
+    height : int, default=600
+        Hauteur de la carte en pixels
+    """
+    
+    
+    # Nettoyer les données en supprimant les lignes avec des coordonnées NaN
+    df_clean = df.dropna(subset=['Latitude', 'Longitude']).copy()
+    
+    # Définition des catégories de questionnaire
+    eligibility_categories = {
+        "Enseignant": {"color": "#0073E6", "size_factor": 12, "opacity": 0.75},
+        "Maire ": {"color": "#B3D9FF", "size_factor": 8, "opacity": 0.7},
+        "Chefferie": {"color": "#FF5733", "size_factor": 4, "opacity": 0.7}
+    }
+    
+    # Préparation des données par statut d'éligibilité
+    dfs_by_eligibility = {}
+    for category in eligibility_categories.keys():
+        geo_data = df_clean[df_clean["Type"] == category]
+        
+        if not geo_data.empty:
+            dfs_by_eligibility[category] = geo_data.groupby("Quartier").agg({
+                'Type': 'size',
+                'Latitude': 'first',
+                'Longitude': 'first'
+            }).rename(columns={'Quartier': 'nb_donateur'})
+            dfs_by_eligibility[category]["Qrt"] = dfs_by_eligibility[category].index
+            # S'assurer qu'il n'y a pas de NaN dans les coordonnées agrégées
+            dfs_by_eligibility[category] = dfs_by_eligibility[category].dropna(subset=['Lat', 'Long'])
+
+    # Préparation des données pour la choroplèthe par arrondissement
+    df_chlph = df_clean.groupby("Arrondissement").agg({
+        'Arrondissement': 'size',
+        'geometry': 'first',
+        'Long': 'first',
+        'Lat': 'first'
+    }).rename(columns={'Arrondissement': 'nb_donateur'})
+    df_chlph["Arr"] = df_chlph.index
+    # S'assurer qu'il n'y a pas de NaN dans les coordonnées agrégées
+    df_chlph = df_chlph.dropna(subset=['Lat', 'Long'])
+    df_chlph = gpd.GeoDataFrame(df_chlph, geometry='geometry')
+    
+    # S'assurer que le CRS est défini - Utiliser EPSG:4326 (WGS84) pour compatibilité avec Folium
+    if df_chlph.crs is None:
+        df_chlph.set_crs(epsg=4326, inplace=True)
+    else:
+        # Si un CRS est déjà défini mais différent de WGS84, le convertir
+        if df_chlph.crs != 'EPSG:4326':
+            df_chlph = df_chlph.to_crs(epsg=4326)
+
+    # Total des candidats par quartier
+    df_pts = df_clean.groupby("Quartier").agg({
+        'Quartier': 'size',
+        'Lat': 'first',
+        'Long': 'first'
+    }).rename(columns={'Quartier': 'nb_donateur'})
+    df_pts["Qrt"] = df_pts.index
+    # S'assurer qu'il n'y a pas de NaN dans les coordonnées agrégées
+    df_pts = df_pts.dropna(subset=['Lat', 'Long'])
+    
+    # Vérifier si df_pts est vide après filtrage
+    if df_pts.empty:
+        st.error("Aucune coordonnée valide trouvée dans les données. Impossible de créer la carte.")
+        return None
+    
+    # Création de la carte Folium
+    center_lat = df_pts["Lat"].mean()
+    center_lon = df_pts["Long"].mean()
+    
+    # Dictionnaire de correspondance entre les styles dans votre fonction originale et ceux de Folium
+    tile_styles = {
+        "carto-positron": "cartodbpositron",
+        "carto-darkmatter": "cartodbdark_matter",
+        "open-street-map": "OpenStreetMap",
+        "CartoDB positron": "cartodbpositron", 
+        "CartoDB dark_matter": "cartodbdark_matter"
+    }
+    
+    # Utiliser le style approprié ou OpenStreetMap par défaut
+    actual_style = tile_styles.get(style_carte, style_carte)
+    
+    # Création de la carte avec le style approprié
+    m = folium.Map(
+        location=[center_lat, center_lon],
+        zoom_start=12,
+        tiles=actual_style,
+        width=width,
+        height=height
+    )
+    
+    # Ajout de la couche choroplèthe pour les arrondissements
+    # Création d'une échelle de couleur avec la bonne classe de branca.colormap
+    if palet_color == "blues":
+        color_range = ['#f7fbff', '#08519c']
+    elif palet_color == "reds":
+        color_range = ['#fee5d9', '#a50f15']
+    elif palet_color == "greens":
+        color_range = ['#edf8e9', '#006d2c']
+    elif palet_color == "viridis":
+        color_range = ['#fde725', '#440154']
+    else:
+        color_range = ['#f7fbff', '#08519c']  # Default to Blues
+    
+    # Création des clusters uniquement pour les arrondissements
+    arrondissement_cluster = MarkerCluster(name="Arrondissements").add_to(m)
+    
+    if not df_chlph.empty:
+        colormap = cm.LinearColormap(
+            colors=color_range, 
+            vmin=df_chlph["nb_donateur"].min(),
+            vmax=df_chlph["nb_donateur"].max(),
+            caption="Nombre de Candidats par Arrondissement"
+        )
+        
+        # Convertir le GeoDataFrame en GeoJSON
+        geo_json_data = df_chlph.__geo_interface__
+        
+        # Ajout des polygones des arrondissements en utilisant le GeoJSON préparé
+        folium.GeoJson(
+            geo_json_data,
+            style_function=lambda feature: {
+                'fillColor': colormap(feature['properties']['nb_donateur']),
+                'color': 'white',
+                'weight': 0.5,
+                'fillOpacity': opacity
+            },
+            tooltip=folium.GeoJsonTooltip(
+                fields=['Arr', 'nb_donateur'],
+                aliases=['Arrondissement:', 'Nombre de candidats:'],
+                style="background-color: white; color: #333333; font-family: arial; font-size: 14px; padding: 10px;"
+            )
+        ).add_to(m)
+        
+        # Ajout des étiquettes d'arrondissement et des marqueurs au cluster d'arrondissements
+        for idx, row in df_chlph.iterrows():
+            # Étiquettes d'arrondissement
+            folium.Marker(
+                location=[row['Lat'], row['Long']],
+                icon=folium.DivIcon(
+                    icon_size=(150, 40),
+                    icon_anchor=(75, 28),
+                    html=f'<div style="font-size: 12px; font-weight: bold; text-align: center">{row["Arr"]}</div>'
+                )
+            ).add_to(m)
+            
+            # Marqueurs d'arrondissement pour le cluster
+            folium.Marker(
+                location=[row['Lat'], row['Long']],
+                popup=f"<b>Arrondissement {row['Arr']}</b><br>Total candidats: <b>{row['nb_donateur']}</b>",
+                icon=folium.Icon(color='blue')
+            ).add_to(arrondissement_cluster)
+        
+        # Ajout de la légende de couleur
+        colormap.add_to(m)
+
+    # Fonction pour calculer la taille du cercle en fonction du nombre de candidats
+    def calculate_radius(count, max_count, base_size=5):
+        return base_size * np.sqrt(count / max_count * 100)
+    
+    max_count = df_pts["nb_donateur"].max() if not df_pts.empty else 1
+    
+    # Création d'un groupe de features pour les cercles des quartiers
+    quartier_feature_group = folium.FeatureGroup(name="Total candidats par quartier")
+    
+    # Ajout des marqueurs pour le total des candidats (directement à la carte, pas de cluster)
+    for idx, row in df_pts.iterrows():
+        radius = calculate_radius(row["nb_donateur"], max_count)
+        popup_text = f"<b>{row['Qrt']}</b><br>Total candidats: <b>{row['nb_donateur']}</b>"
+        
+        folium.CircleMarker(
+            location=[row['Lat'], row['Long']],
+            radius=radius,
+            color='#003F80',
+            fill=True,
+            fill_color='#003F80',
+            fill_opacity=0.8,
+            popup=folium.Popup(popup_text, max_width=300)
+        ).add_to(quartier_feature_group)
+    
+    # Ajout du groupe de features à la carte
+    quartier_feature_group.add_to(m)
+        
+    # Ajout des marqueurs pour chaque catégorie d'éligibilité (directement à la carte, pas de cluster)
+    for category, df_pts_cat in dfs_by_eligibility.items():
+        if df_pts_cat.empty:
+            continue
+            
+        config = eligibility_categories[category]
+        
+        # Création d'un groupe de features pour cette catégorie
+        category_feature_group = folium.FeatureGroup(name=category)
+        
+        max_count_cat = df_pts_cat["nb_donateur"].max() if not df_pts_cat.empty else 1
+        
+        for idx, row in df_pts_cat.iterrows():
+            radius = calculate_radius(row["nb_donateur"], max_count_cat, base_size=config["size_factor"]/4)
+            popup_text = f"<b>{row['Qrt']}</b><br>Candidats {category}: <b>{row['nb_donateur']}</b>"
+            
+            folium.CircleMarker(
+                location=[row['Lat'], row['Long']],
+                radius=radius,
+                color=config["color"],
+                fill=True,
+                fill_color=config["color"],
+                fill_opacity=config["opacity"],
+                popup=folium.Popup(popup_text, max_width=300)
+            ).add_to(category_feature_group)
+        
+        # Ajout du groupe de features à la carte
+        category_feature_group.add_to(m)
+            
+    # Ajout du contrôle de couches
+    folium.LayerControl(collapsed=False).add_to(m)
+    
+    # Ajout d'une légende pour les cercles des points
+    legend_html = '''
+        <div style="position: fixed; 
+                    bottom: 50px; right: 50px; 
+                    width: 220px;
+                    background-color: white;
+                    border: 2px solid grey;
+                    border-radius: 5px;
+                    z-index: 9999;
+                    font-size: 14px;
+                    padding: 10px;
+                    opacity: 0.9;">
+            <div style="text-align: center; margin-bottom: 5px;"><b>Légende des points</b></div>
+    '''
+    
+    # Ajouter une entrée de légende pour les cercles totaux
+    legend_html += f'''
+        <div style="margin-bottom: 7px;">
+            <div style="display: inline-block; 
+                      width: 15px; 
+                      height: 15px; 
+                      border-radius: 50%; 
+                      background-color: #003F80;
+                      margin-right: 5px;
+                      vertical-align: middle;"></div>
+            <span style="vertical-align: middle;">Total candidats</span>
+        </div>
+    '''
+    
+    # Ajouter des entrées pour chaque catégorie d'éligibilité
+    for category, config in eligibility_categories.items():
+        if category in dfs_by_eligibility and not dfs_by_eligibility[category].empty:
+            legend_html += f'''
+                <div style="margin-bottom: 7px;">
+                    <div style="display: inline-block; 
+                              width: 15px; 
+                              height: 15px; 
+                              border-radius: 50%; 
+                              background-color: {config['color']};
+                              opacity: {config['opacity']};
+                              margin-right: 5px;
+                              vertical-align: middle;"></div>
+                    <span style="vertical-align: middle;">{category}</span>
+                </div>
+            '''
+    
+    # Fermer la div de la légende
+    legend_html += '</div>'
+    
+    # Ajouter la légende à la carte
+    m.get_root().html.add_child(folium.Element(legend_html))
+    
+    # Ajout d'un titre 
+    title_html = '''
+        <div style="position: fixed; 
+                    top: 10px; left: 50px; width: 600px; height: 45px; 
+                    background-color: white; border-radius: 5px;
+                    z-index: 9999; font-size: 20px; font-family: Arial;
+                    padding: 10px; text-align: center; color: #333;">
+            <b>Distribution des Candidats par Éligibilité</b>
+        </div>
+    '''
+    m.get_root().html.add_child(folium.Element(title_html))
+    
+    # Affichage avec Streamlit
+    folium_static(m, width=width, height=height)
+    
+    return m
+
+    
+def make_st_heatmap_echat2(df, title="", height="700px"):
+    """
+    Create an interactive heatmap using echarts
+    
+    Parameters:
+    -----------
+    df : pandas.DataFrame
+        The crosstab or pivot table to visualize
+    title : str
+        Title of the heatmap
+    height : str
+        Height of the chart (default "600px")
+    """
+    # Convert timestamps in index and columns to strings
+    df.columns = [str(col) for col in df.columns]
+    df.index = [str(idx) for idx in df.index]
+    
+    x_labels = df.columns.tolist()
+    y_labels = df.index.tolist()
+    
+    # Determine which axis should be longer
+    if len(x_labels) < len(y_labels):
+        x_labels, y_labels = y_labels, x_labels
+        df = df.T
+
+    data = []
+    for i, y_val in enumerate(y_labels):
+        for j, x_val in enumerate(x_labels):
+            value = df.iloc[i, j]
+            try:
+                value = float(value)
+            except:
+                value = 0  # ou np.nan si tu veux ignorer
+            data.append([j, i, value])
+
+    options = {
+        "tooltip": {"position": 'top'},
+        "grid": {
+            "height": '55%',
+            "top": '1%'
+        },
+        "xAxis": {
+            "type": 'category',
+            "data": x_labels,
+            "splitArea": {"show": True},
+            "axisLabel": {
+                "rotate": 90,
+                "interval": 0,
+                "fontSize": 8,
+                "width": 50,
+                "overflow": "truncate"
+            }
+        },
+        "yAxis": {
+            "type": 'category',
+            "data": y_labels,
+            "splitArea": {"show": True}
+        },
+        "visualMap": {
+            "min": 0,
+            "max": max([d[2] for d in data]),
+            "calculable": True,
+            "orient": 'vertical',
+            "right": '5%',
+            "bottom": '50%'
+        },
+        "series": [{
+            "name": "Charge accomplie",
+            "type": 'heatmap',
+            "data": data,
+            "label": {"show": True},
+            "emphasis": {
+                "itemStyle": {
+                    "shadowBlur": 10,
+                    "shadowColor": 'rgba(0, 0, 0, 0.5)'
+                }
+            }
+        }]
+    }
+
+    st.write(title)
+    st_echarts(options=options, height=height)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def make_school_map_test(df, style_carte="OpenStreetMap", palet_color="blues", opacity=0.8, width=700, height=600):
     """
     Fonction pour créer une carte choroplèthe interactive montrant la distribution des candidats
     par statut d'éligibilité à travers différents quartiers et arrondissements, en utilisant Folium.
@@ -4368,78 +5128,3 @@ def make_school_map2(df, style_carte="OpenStreetMap", palet_color="blues", opaci
 
     return m
 
-
-def make_st_heatmap_echat(df, title="", height="700px"):
-            """
-            Create an interactive heatmap using echarts
-            
-            Parameters:
-            -----------
-            df : pandas.DataFrame
-                The crosstab or pivot table to visualize
-            title : str
-                Title of the heatmap
-            height : str
-                Height of the chart (default "600px")
-            """
-            # Get dimensions and prepare data
-            x_labels = df.columns.tolist()
-            y_labels = df.index.tolist()
-            
-            # Determine which axis should be longer
-            if len(x_labels) < len(y_labels):
-                x_labels, y_labels = y_labels, x_labels
-                df = df.T
-                
-            data = []
-            for i, y_val in enumerate(y_labels):
-                for j, x_val in enumerate(x_labels):
-                    data.append([j, i, float(df.iloc[i, j])])
-            
-            options = {
-                "tooltip": {"position": 'top'},
-                "grid": {
-                    "height": '55%',
-                    "top": '1%'
-                },
-                "xAxis": {
-                    "type": 'category',
-                    "data": x_labels,
-                    "splitArea": {"show": True},
-                    "axisLabel": {
-                        "rotate": 90,
-                        "interval": 0,
-                        "fontSize": 8,
-                        "width": 50,
-                        "overflow": "truncate"
-                    }
-                },
-                "yAxis": {
-                    "type": 'category',
-                    "data": y_labels,
-                    "splitArea": {"show": True}
-                },
-                "visualMap": {
-                    "min": 0,
-                    "max": max([d[2] for d in data]),
-                    "calculable": True,
-                    "orient": 'vertical',
-                    "right": '5%',
-                    "bottom": '50%'
-                },
-                "series": [{
-                    "name": "Charge accomplie" ,
-                    "type": 'heatmap',
-                    "data": data,
-                    "label": {"show": True},
-                    "emphasis": {
-                        "itemStyle": {
-                            "shadowBlur": 10,
-                            "shadowColor": 'rgba(0, 0, 0, 0.5)'
-                        }
-                    }
-                }]
-            }
-
-            st.write(title)
-            st_echarts(options=options, height=height)
