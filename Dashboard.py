@@ -869,7 +869,8 @@ def main():
             st.image(logo2,caption="",width=165)
         la_date=st.sidebar.date_input(traduire_texte("Sélectionner la date de collecte",lang),dt.datetime(2025, 5, 20).date(),min_value=dt.datetime(2023, 1, 1).date(),max_value=dt.datetime(2025, 12, 31).date())
         All_data["Date"]=pd.to_datetime(All_data["Date"], format="%d/%m/%Y")
-        #data_to_plot=data[data["Date_Colle"]<=la_date.strftime("%Y-%m-%d")]
+        data=data[data["Date_Colle"]<=la_date.strftime("%Y-%m-%d")]
+        
         data_to_plot=All_data
         tabs = st.tabs([
             f"📈 {traduire_texte('ANALYSE GENERALE', lang)}", 
