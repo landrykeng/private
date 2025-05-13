@@ -792,6 +792,9 @@ def main():
         rep_region=pd.DataFrame(data_rep["SRegion"].value_counts())
         rep_sup=pd.DataFrame(data_rep["SUP"].value_counts())
         
+        user=st.session_state['username']
+        data_rep=data_rep[data_rep["Superviseur"]==user]
+        All_data_user=All_data[All_data["Superviseur"]==user]
         
        
         
@@ -868,8 +871,7 @@ def main():
             st.image(logo2,caption="",width=165)
         la_date=st.sidebar.date_input(traduire_texte("Sélectionner la date de collecte",lang),dt.datetime(2025, 5, 20).date(),min_value=dt.datetime(2023, 1, 1).date(),max_value=dt.datetime(2025, 12, 31).date())
         All_data["Date"]=pd.to_datetime(All_data["Date"], format="%d/%m/%Y")
-        data=data[data["Date_Colle"]<=la_date.strftime("%Y-%m-%d")]
-        
+        #data_to_plot=data[data["Date_Colle"]<=la_date.strftime("%Y-%m-%d")]
         data_to_plot=All_data
         tabs = st.tabs([
             f"📈 {traduire_texte('ANALYSE GENERALE', lang)}", 
@@ -968,8 +970,8 @@ def main():
                     fond_color= "orange"
                 else:
                     fond_color= "blues"
-                #data_to_plot_cart=data[data["Type_Quest"]==type_questionnaire]
-            make_school_map_test(data,opacity=opacity,style_carte=style_carte,palet_color="blues",width=780, height=1000)
+                data_to_plot_cart=data[data["Type_Quest"]==type_questionnaire]
+                make_school_map_test(data_to_plot_cart,opacity=opacity,style_carte=style_carte,palet_color=fond_color,width=780, height=1000)
         with tabs[1]:
             col1=st.columns([1,1])
             with col1[0]:
