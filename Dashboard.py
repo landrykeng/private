@@ -776,27 +776,27 @@ def main():
         
         
         # ===================================================
-        
+    #=====IMPORTATION DES BASES DE DONNEE NECESSAIRE POUR LES ANALYSES====================
         @st.cache_data()
         def load_data2():
             data=gpd.read_file("geo_data_survey.shp")
-            All_data=pd.read_excel("DataGood.xlsx")
             data_rep=pd.read_excel("ECHANTILLON.xlsx")
-            geo_data=gpd.read_file("geo_data.shp")
-            All_data["Date"]=All_data["Date"].dt.date
-            
-            All_data["Superviseur"] = "S_" + All_data["Superviseur"].astype(str)
-            All_data["Enqueteur"] = "E_" + All_data["Enqueteur"].astype(str)
-            All_data["Temp"]=round((All_data["Heure fin"]-All_data["Heure debut"])/60,2)
-            
             rep_region=pd.DataFrame(data_rep["SRegion"].value_counts())
             rep_sup=pd.DataFrame(data_rep["SUP"].value_counts())
+            return data,  data_rep, rep_region, rep_sup
+        
+        
+        data, data_rep, rep_region, rep_sup = load_data2()
+        
+        All_data=pd.read_excel("DataGood.xlsx")
+        geo_data=gpd.read_file("geo_data.shp")
+        All_data["Date"]=All_data["Date"].dt.date
             
-            return data, All_data, data_rep, rep_region, rep_sup, geo_data
+        All_data["Superviseur"] = "S_" + All_data["Superviseur"].astype(str)
+        All_data["Enqueteur"] = "E_" + All_data["Enqueteur"].astype(str)
+        All_data["Temp"]=round((All_data["Heure fin"]-All_data["Heure debut"])/60,2)
+     # =================================================================================     
         
-        
-        data, All_data, data_rep, rep_region, rep_sup, geo_data = load_data2()
-       
         
        
         
@@ -1070,6 +1070,17 @@ def main():
             time_All_data=All_data[All_data["Superviseur"].isin(Sup_time)]
             time_All_data=All_data[All_data["Type"]==time_type]
             time_distribution=px.box(time_All_data,y="Temp",x="Enqueteur",color="Résultat",title=traduire_texte(f"Distribution des temps de remplissage (en minutes) du questionnaire {time_type} par enquêteur",lang))
+            time_distribution.update_layout(
+                xaxis=dict(
+                    tickfont=dict(size=18),  # Taille des labels de l'axe x
+                    title_font=dict(size=16)  # Taille du titre de l'axe x
+                ),
+                yaxis=dict(
+                    tickfont=dict(size=18),  # Taille des labels de l'axe y
+                    title_font=dict(size=16)  # Taille du titre de l'axe y
+                ),
+                title=dict(font=dict(size=18))  # Taille du titre du graphique
+            )
             st.plotly_chart(time_distribution)
         
 if __name__ == "__main__":
