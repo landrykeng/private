@@ -505,8 +505,10 @@ def extrat_enseignant(superviseur=None):
         
         if os.path.exists(fichier):
             other_file=fichier + ".lst"
-            os.remove(fichier)
-            os.remove(other_file)
+            if os.path.exists(fichier):
+                os.remove(fichier)
+            if os.path.exists(other_file):
+                os.remove(other_file)
         #merged_df["Type"]="Enseignant"
         #merged_df=merged_df.rename(columns=dico_colonne_ens)
 
@@ -560,8 +562,10 @@ def extrat_maire(superviseur=None):
         
         if os.path.exists(fichier):
             other_file=fichier + ".lst"
-            os.remove(fichier)
-            os.remove(other_file)
+            if os.path.exists(fichier):
+                os.remove(fichier)
+            if os.path.exists(other_file):
+                os.remove(other_file)
         #merged_df["Type"]="Maire"
         #merged_df=merged_df.rename(columns=dico_colonne_maire)
 
@@ -615,8 +619,10 @@ def extrat_chef(superviseur=None):
         
         if os.path.exists(fichier):
             other_file=fichier + ".lst"
-            os.remove(fichier)
-            os.remove(other_file)
+            if os.path.exists(fichier):
+                os.remove(fichier)
+            if os.path.exists(other_file):
+                os.remove(other_file)
         #merged_df["Type"]="Chefferie"
         #merged_df=merged_df.rename(columns=dico_colonne_ch)
 
@@ -668,8 +674,10 @@ def extrat_eleve(superviseur=None):
             continue
         if os.path.exists(fichier):
             other_file=fichier + ".lst"
-            os.remove(fichier)
-            os.remove(other_file)
+            if os.path.exists(fichier):
+                os.remove(fichier)
+            if os.path.exists(other_file):
+                os.remove(other_file)
         #new_col=[dico_colonne_eleve[col] for col in merged_df.columns]
         #merged_df.columns=new_col
         #merged_df["Type"]="Elève"
@@ -723,8 +731,10 @@ def extrat_ecole_maire(superviseur=None):
         
         if os.path.exists(fichier):
             other_file=fichier + ".lst"
-            os.remove(fichier)
-            os.remove(other_file)
+            if os.path.exists(fichier):
+                os.remove(fichier)
+            if os.path.exists(other_file):
+                os.remove(other_file)
         #merged_df["Type"]="Ecole-Maire"
         #merged_df=merged_df.rename(columns=dico_colonne_ec)
 

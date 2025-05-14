@@ -669,7 +669,7 @@ def main():
         
         
         
-        #@st.cache_data()
+        
         def load_data():
             download_ftp_files()
             Unzip_All_Files()
@@ -777,22 +777,25 @@ def main():
         
         # ===================================================
         
+        @st.cache_data()
+        def load_data2():
+            data=gpd.read_file("geo_data_survey.shp")
+            All_data=pd.read_excel("DataGood.xlsx")
+            data_rep=pd.read_excel("ECHANTILLON.xlsx")
+            geo_data=gpd.read_file("geo_data.shp")
+            All_data["Date"]=All_data["Date"].dt.date
+            
+            All_data["Superviseur"] = "S_" + All_data["Superviseur"].astype(str)
+            All_data["Enqueteur"] = "E_" + All_data["Enqueteur"].astype(str)
+            All_data["Temp"]=round((All_data["Heure fin"]-All_data["Heure debut"])/60,2)
+            
+            rep_region=pd.DataFrame(data_rep["SRegion"].value_counts())
+            rep_sup=pd.DataFrame(data_rep["SUP"].value_counts())
+            
+            return data, All_data, data_rep, rep_region, rep_sup, geo_data
         
-        data=gpd.read_file("geo_data_survey.shp")
-        All_data=pd.read_excel("DataGood.xlsx")
-        data_rep=pd.read_excel("ECHANTILLON.xlsx")
-        geo_data=gpd.read_file("geo_data.shp")
         
-        All_data["Date"]=All_data["Date"].dt.date
-        
-        All_data["Superviseur"] = "S_" + All_data["Superviseur"].astype(str)
-        All_data["Enqueteur"] = "E_" + All_data["Enqueteur"].astype(str)
-        All_data["Temp"]=round((All_data["Heure fin"]-All_data["Heure debut"])/60,2)
-        
-        rep_region=pd.DataFrame(data_rep["SRegion"].value_counts())
-        rep_sup=pd.DataFrame(data_rep["SUP"].value_counts())
-        
-        
+        data, All_data, data_rep, rep_region, rep_sup, geo_data = load_data2()
        
         
        

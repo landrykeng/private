@@ -796,7 +796,7 @@ def main():
                 #make_cross_hist_b(data_to_plot,var2="ID_Supervi",var1="Type_Quest",titre=traduire_texte("Charge de travail accomplie par superviseur",lang))
                 make_cross_hist_b(data_controleur,var2="ID_Enquêt",palette=palette[6:],var1="Type_Quest",titre=traduire_texte("Charge de travail accomplie par enquêteur",lang),typ_bar=2)
             cross_enq=pd.crosstab(data["ID_Enquêt"],data["Date"])
-            make_st_heatmap_echat(cross_enq,title=traduire_texte("Charge de travail accomplie par enquêteur",lang))
+            make_st_heatmap_echat2(cross_enq,title=traduire_texte("Charge de travail accomplie par enquêteur",lang))
             
         
 if __name__ == "__main__":

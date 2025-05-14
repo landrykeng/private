@@ -653,7 +653,7 @@ def set_language():
 def main():
     #st.write("Autre approche: Au cas ou la première approche ne marche pas, inscrivez vous dans l'onglet connexion ci contre et utiliser vos identifiants pour vous connecter")
     st.markdown(tabs_css, unsafe_allow_html=True)
-    is_authenticated = authentication_system("superviseur général")
+    is_authenticated = authentication_system("Superviseur")
     if is_authenticated:
         
         st.markdown(sidebar_css, unsafe_allow_html=True)
@@ -773,7 +773,25 @@ def main():
             return final_df, geo_df,  last_update
         # Test pour le chargegement et la récupération
         
+        @st.cache_data()
+        def load_data2():
+            data=gpd.read_file("geo_data_survey.shp")
+            All_data=pd.read_excel("DataGood.xlsx")
+            data_rep=pd.read_excel("ECHANTILLON.xlsx")
+            geo_data=gpd.read_file("geo_data.shp")
+            All_data["Date"]=All_data["Date"].dt.date
+            
+            All_data["Superviseur"] = "S_" + All_data["Superviseur"].astype(str)
+            All_data["Enqueteur"] = "E_" + All_data["Enqueteur"].astype(str)
+            All_data["Temp"]=round((All_data["Heure fin"]-All_data["Heure debut"])/60,2)
+            
+            rep_region=pd.DataFrame(data_rep["SRegion"].value_counts())
+            rep_sup=pd.DataFrame(data_rep["SUP"].value_counts())
+            
+            return data, All_data, data_rep, rep_region, rep_sup, geo_data
         
+        
+        data, All_data, data_rep, rep_region, rep_sup, geo_data = load_data2()
         
         # ===================================================
         
@@ -793,7 +811,7 @@ def main():
         rep_sup=pd.DataFrame(data_rep["SUP"].value_counts())
         
         user=st.session_state['username']
-        data_rep=data_rep[data_rep["Superviseur"]==user]
+        data_rep=data_rep[data_rep["SUP"]==user]
         All_data_user=All_data[All_data["Superviseur"]==user]
         
        
@@ -811,8 +829,8 @@ def main():
         charge_controleur=data_rep["CTR"].value_counts()
         charge_superviseur=data_rep["SUP"].value_counts()
         
-        All_data['Total_enfa'] = np.where(All_data['Type'] == 'Enfant', 1, 0)
-        All_data['Total_ense'] = np.where(All_data['Type'] == 'Enseignant', 1, 0)
+        All_data_user['Total_enfa'] = np.where(All_data_user['Type'] == 'Enfant', 1, 0)
+        All_data_user['Total_ense'] = np.where(All_data_user['Type'] == 'Enseignant', 1, 0)
         logo=Image.open("Logo_INS.png")
         logo2=Image.open("Logo_FEICOM.png")
         cl_tb=st.columns([1,7,1])
@@ -825,6 +843,9 @@ def main():
             if upload_bt:
                 with st.spinner("Téléchargement des nouvelles données...",show_time=True):
                     All_data, geo_data, last_update =load_data()
+                    All_data_user['Total_enfa'] = np.where(All_data_user['Type'] == 'Enfant', 1, 0)
+                    All_data_user['Total_ense'] = np.where(All_data_user['Type'] == 'Enseignant', 1, 0)
+                    
                     st.success("Mise à jour effectuée.")
         with col_fonfig[1]:
             st.markdown(f"""
@@ -870,35 +891,34 @@ def main():
         with cl_tb[2]:
             st.image(logo2,caption="",width=165)
         la_date=st.sidebar.date_input(traduire_texte("Sélectionner la date de collecte",lang),dt.datetime(2025, 5, 20).date(),min_value=dt.datetime(2023, 1, 1).date(),max_value=dt.datetime(2025, 12, 31).date())
-        All_data["Date"]=pd.to_datetime(All_data["Date"], format="%d/%m/%Y")
+        All_data_user["Date"]=pd.to_datetime(All_data["Date"], format="%d/%m/%Y")
         #data_to_plot=data[data["Date_Colle"]<=la_date.strftime("%Y-%m-%d")]
-        data_to_plot=All_data
+        data_to_plot=All_data_user
         tabs = st.tabs([
-            f"📈 {traduire_texte('ANALYSE GENERALE', lang)}", 
-            f"📊 {traduire_texte('PERFORMANCE ET QUALITE DES DONNEES', lang)}"
+            f"📈 {traduire_texte('ESPACE SUPERVISEUR', lang)}"
             ])
         
         with tabs[0]:
             ca=st.columns(5)
             df_date1=data_to_plot[data_to_plot["Date"]==la_date.strftime("%Y-%m-%d")]
             df_date2=data_to_plot[data_to_plot["Date"]==(la_date- dt.timedelta(days=1)).strftime("%Y-%m-%d")]
-            ab=All_data["Type"].value_counts()
-            ab2=All_data["Type"].value_counts()
+            ab=All_data_user["Type"].value_counts()
+            ab2=All_data_user["Type"].value_counts()
             ab=pd.DataFrame(ab)
-           
             ab.columns=["today"]
             ab["yesterday"]=ab2
             total_today = ab['today'].sum()
             total_yesterday = ab['yesterday']["Elève"] + ab['yesterday']["Enseignant"]
             
             #Calcul des progression par type de questionnaire
-            progress_enf=All_data['Type'].value_counts()["Elève"]/(18*data_rep.shape[0])
-            progress_ens=All_data['Type'].value_counts()["Enseignant"]/(3*data_rep.shape[0])
-            progress_maire=All_data['Type'].value_counts()["Maire"]/(data_rep.shape[0])
-            progress_chef=All_data['Type'].value_counts()["Chefferie"]/(data_rep.shape[0])
-            progress_em=All_data['Type'].value_counts()["Ecole-Maire"]/(data_rep.shape[0])
+            progress_enf=All_data_user['Type'].value_counts()["Elève"]/(18*data_rep.shape[0])
+            progress_ens=All_data_user['Type'].value_counts()["Enseignant"]/(3*data_rep.shape[0])
+            progress_maire=All_data_user['Type'].value_counts()["Maire"]/(data_rep.shape[0])
+            progress_chef=All_data_user['Type'].value_counts()["Chefferie"]/(data_rep.shape[0])
+            progress_em=All_data_user['Type'].value_counts()["Ecole-Maire"]/(data_rep.shape[0])
             progress_all=total_today/(24*data_rep.shape[0])
 
+            
             #Affichage des métrique des effectifs de chaque type de questionnaire.
             with ca[0]:
                 display_single_metric_advanced(" Elève", ab['today']["Elève"], delta=round(100*progress_enf,2), color_scheme="blue")
@@ -911,7 +931,7 @@ def main():
             with ca[4]:
                 display_single_metric_advanced(" Ecole-Maire", ab['today']["Ecole-Maire"], delta=round(100*progress_em , 2), color_scheme="teal")
             st.write('')  
-            col=st.columns([5.3,4.7])
+            col=st.columns([6,4])
             
             with col[0] :
                 
@@ -926,31 +946,45 @@ def main():
                 data_tx['progression'] = (data_tx['Total_enfa'] + data_tx['Total_ense'])/(data_tx['Reg_ens'] + data_tx['Reg_enf'])
                 progress_enf=data_tx['Total_enfa'].sum()/data_tx['Reg_enf'].sum()
                 progress_ens=data_tx['Total_ense'].sum()/data_tx['Reg_ens'].sum()
-                sublcb1=st.columns(2)
+                sublcb1=st.columns([3,3])
                 
                 with sublcb1[0]:
                     display_single_metric_advanced(" Total", total_today, delta=round(100*progress_all, 2), color_scheme="orange")
                     st.write("")
-                with sublcb1[1]:
                     make_progress_char(progress_all,couleur="",titre=traduire_texte("Progression de la collecte",lang))
+                with sublcb1[1]:
+                    make_cross_hist_b(All_data_user,var2="Enqueteur",palette=palette[6:],var1="Type",titre=traduire_texte("Charge de travail accomplie par enquêteur",lang),typ_bar=2,width=500)
                 
-                total_charge=[]
-                for j in range(len(All_data["Région"].unique())):
-                    reg=All_data["Région"].unique()[j]
-                    el=[[reg,"Elève"] for i in range(1,18*rep_region["count"][reg]+1)]
-                    ens=[[reg,"Enseignant"] for i in range(1,3*rep_region["count"][reg]+1)]
-                    charge=el + ens + [[reg, "Chefferie"]] + [[reg, "Mairie"] for i in range(1,rep_region["count"][reg]+1)] + [[reg, "Ecole-Mairie"] for i in range(1,rep_region["count"][reg]+1)]
-                    total_charge += charge
-                total_charge=pd.DataFrame(total_charge, columns=["Région", "Type"])
-                
-                
-                make_cross_hist_b(total_charge,var1="Type",palette=palette[6:],var2="Région",titre=traduire_texte("Répartition par région de la charge de travail",lang))
+                #
             with col[1]:
-                make_multi_progress_bar(data_tx['Région'],data_tx['progression'],colors=palette[0:11],titre=traduire_texte("Progression par région",lang),height=700)
+                progress_enf_sup=All_data_user['Type'].value_counts()["Elève"]/(18*data_rep.shape[0])
+                progress_ens_sup=All_data_user['Type'].value_counts()["Enseignant"]/(3*data_rep.shape[0])
+                progress_maire_sup=All_data_user['Type'].value_counts()["Maire"]/(data_rep.shape[0])
+                progress_chef_sup=All_data_user['Type'].value_counts()["Chefferie"]/(data_rep.shape[0])
+                progress_em_sup=All_data_user['Type'].value_counts()["Ecole-Maire"]/(data_rep.shape[0])
+                    
+                make_multi_progress_bar(["Elève","Enseignant","Maire","Chefferie","Ecole-Maire"],[progress_enf_sup,progress_ens_sup,progress_maire_sup,progress_chef_sup,progress_em_sup], colors=palette)
+        
+            cb=st.columns(2)
             
-            
-               
+            #with cb[0]:
+               #pass
+            #with cb[1]:
+            sup_enqueteur=st.selectbox("Sélectionner un anquêteur", options=All_data_user["Enqueteur"].unique())
+            data_enq=All_data_user[All_data_user["Enqueteur"]==sup_enqueteur]
+            subcol1=st.columns([1,1])
                 
+            with subcol1[0]:
+                make_bar(data_enq,var="Résultat", height=500,titre=traduire_texte("Qualité des questionaires",lang),color=5)
+            with subcol1[1]:
+                data_without_coord=data_enq[(data_enq["Longitude"].isna()) | (data_enq["Latitude"].isna())]
+                make_progress_char(data_without_coord.shape[0]/All_data_user.shape[0],couleur="",titre=traduire_texte("Questionnaires sans  coordonnées",lang))
+                dit_time=px.box(data_enq, "Temp", height=300, title="Distribution (en minute) du temps de remplissage")
+                st.plotly_chart(dit_time)
+        cart_col=st.columns([6,10])
+            
+        with cart_col[0]:
+            
                 cl_config_cart=st.columns(3)
                 with cl_config_cart[0]:
                     opacity=st.slider(traduire_texte("Opacité de la carte",lang), 0.0, 1.0, value=0.5)
@@ -971,94 +1005,31 @@ def main():
                 else:
                     fond_color= "blues"
                 data_to_plot_cart=data[data["Type_Quest"]==type_questionnaire]
-                make_school_map_test(data_to_plot_cart,opacity=opacity,style_carte=style_carte,palet_color=fond_color,width=780, height=1000)
-        with tabs[1]:
-            col1=st.columns([1,1])
-            with col1[0]:
-                total_charge_sup=[]
-                for j in range(len(All_data["Superviseur"].unique())):
-                    sup=All_data["Superviseur"].unique()[j]
-                    el=[[sup,"Elève"] for i in range(1,18*rep_sup["count"][sup]+1)]
-                    ens=[[sup,"Enseignant"] for i in range(1,3*rep_sup["count"][sup]+1)]
-                    charge=el + ens + [[sup, "Chefferie"]] + [[sup, "Mairie"] for i in range(1,rep_sup["count"][sup]+1)] + [[sup, "Ecole-Mairie"] for i in range(1,rep_sup["count"][sup]+1)]
-                    total_charge_sup += charge
-                total_charge_sup=pd.DataFrame(total_charge_sup, columns=["Superviseur", "Type"])
-            
-                make_cross_hist_b(total_charge_sup,var2="Superviseur",palette=palette[3:],var1="Type",titre=traduire_texte("Charge de travail accomplie par superviseur",lang))
-                
-            with col1[1]:
-                sbcl=st.columns([1,1])
-                with sbcl[0]:
-                    superviseur=st.selectbox(traduire_texte("Sélectionner le Superviseur",lang),data_to_plot["Superviseur"].unique())
-                    data_superviz=All_data[All_data["Superviseur"]==superviseur]   
-                    ab_sup=data_superviz["Type"].value_counts()
-                    ab_sup=pd.DataFrame(ab_sup)
-                    total_progress_sup = ab_sup['count'].sum()/(24*rep_sup["count"][superviseur])
-                    display_single_metric_advanced(" Total", ab_sup['count'].sum(), delta=round(100*total_progress_sup , 2), color_scheme="teal")
-                st.write("")
-                with sbcl[1]:
-                   make_progress_char(total_progress_sup,couleur="",titre=traduire_texte("Progression de la collecte",lang))
-                
-                progress_enf_sup=data_superviz['Type'].value_counts()["Elève"]/(18*data_rep.shape[0])
-                progress_ens_sup=data_superviz['Type'].value_counts()["Enseignant"]/(3*data_rep.shape[0])
-                progress_maire_sup=data_superviz['Type'].value_counts()["Maire"]/(data_rep.shape[0])
-                progress_chef_sup=data_superviz['Type'].value_counts()["Chefferie"]/(data_rep.shape[0])
-                progress_em_sup=data_superviz['Type'].value_counts()["Ecole-Maire"]/(data_rep.shape[0])
-                
-                make_multi_progress_bar(["Elève","Enseignant","Maire","Chefferie","Ecole-Maire"],[progress_enf_sup,progress_ens_sup,progress_maire_sup,progress_chef_sup,progress_em_sup], colors=palette)
-                
-                #data_tx_sup=data_superviz.groupby(['Région']).agg({'Total_enfa':'sum','Total_ense':'sum'}).reset_index()
-                #data_tx_sup = data_tx_sup.merge(region_counts, on='Région', how='left')
-                #data_tx_sup["Reg_enf"] = 18 * data_tx_sup["count"]
-                #data_tx_sup["Reg_ens"]=3*data_tx_sup["count"]
-                
-                #data_tx_sup['progression'] = (data_tx_sup['Total_enfa'] + data_tx_sup['Total_ense'])/(data_tx_sup['Reg_ens'] + data_tx_sup['Reg_enf'])
-                #progress_enf_sup=data_tx_sup['Total_enfa'].sum()/data_tx_sup['Reg_enf'].sum()
-                #progress_ens_sup=data_tx_sup['Total_ense'].sum()/data_tx_sup['Reg_ens'].sum()
-                #global_progress_sup=(data_tx_sup['Total_enfa'].sum() + data_tx_sup['Total_ense'].sum())/(data_tx_sup['Reg_ens'].sum() + data_tx_sup['Reg_enf'].sum())
-                sup_enqueteur=st.selectbox("Sélectionner un anquêteur", options=data_superviz["Enqueteur"].unique())
-                data_enq=data_superviz[data_superviz["Enqueteur"]==sup_enqueteur]
-                subcol1=st.columns([1,1])
-                
-                with subcol1[0]:
-                    make_bar(data_enq,var="Résultat", height=500,titre=traduire_texte("Qualité des questionaires",lang),color=5)
-                with subcol1[1]:
-                    data_without_coord=data_enq[(data_enq["Longitude"].isna()) | (data_enq["Latitude"].isna())]
-                    make_progress_char(data_without_coord.shape[0]/data_superviz.shape[0],couleur="",titre=traduire_texte("Questionnaires sans  coordonnées",lang))
-                    dit_time=px.box(data_enq, "Temp", height=300, title="Distribution (en minute) du temps de remplissage")
-                    st.plotly_chart(dit_time)
-                #make_cross_hist_b(data_superviz,var1="ID_Contrô",palette=palette[6:],var2="Type_Quest",titre=traduire_texte("Charge de travail accomplie par controleur",lang),sens="h",height=200)
-                
-                data_control=data_superviz.groupby(['Controleur']).agg({'Total_enfa':'sum','Total_ense':'sum'})
-                # Calculate the progression for each controller
-                data_control['progression'] = (
-                    (data_control['Total_enfa'] + data_control['Total_ense']) /
-                    (data_control.index.map(role_counts["Contrôleur"]) * (18 + 3))
-                )
-                #te
-                #make_multi_progress_bar(data_control.index,data_control['progression'],colors=palette[2:5], titre=traduire_texte("Progression des contrôleurs",lang),height=200)
-            with col1[0]:
-                #make_cross_hist_b(data_to_plot,var2="ID_Supervi",var1="Type_Quest",titre=traduire_texte("Charge de travail accomplie par superviseur",lang))
-                make_cross_hist_b(data_superviz,var2="Enqueteur",palette=palette[6:],var1="Type",titre=traduire_texte("Charge de travail accomplie par enquêteur",lang),typ_bar=2)
-            tcol=st.columns(2)
-            with tcol[0]:
-                superviz_for_heat_map=st.multiselect(traduire_texte("Sélectionner le (s) superviseur (s)",lang),data_to_plot["Superviseur"].unique(),default=data_to_plot["Superviseur"].unique())
-            with tcol[1]:
-                enq_type=st.multiselect(traduire_texte("Sélectionner un type de questionnaire",lang),data_to_plot["Type"].unique(), default=data_to_plot["Type"].unique()[1])
-            data_superviz_heat_map=data_to_plot[(data_to_plot["Superviseur"].isin(superviz_for_heat_map)) & (data_to_plot["Type"].isin(enq_type))]
-            cross_enq=pd.crosstab(data_superviz_heat_map["Enqueteur"],data_superviz_heat_map["Date"])
-            make_st_heatmap_echat2(cross_enq,title=traduire_texte("Charge de travail accomplie par enquêteur",lang)) if data_superviz_heat_map.shape[0]>0 else None
-            
-            
-            cltime=st.columns([2.5,9])
-            with cltime[0]:
-                time_type=st.selectbox("Choississez un type de questionnaire", options=All_data["Type"].unique())
-            with cltime[1]:
-                Sup_time=st.multiselect("SUPERVISEUR", options=All_data["Superviseur"].unique(), default=All_data["Superviseur"].unique())
-            time_All_data=All_data[All_data["Superviseur"].isin(Sup_time)]
-            time_All_data=All_data[All_data["Type"]==time_type]
-            time_distribution=px.box(time_All_data,y="Temp",x="Enqueteur",color="Résultat",title=traduire_texte(f"Distribution des temps de remplissage (en minutes) du questionnaire {time_type} par enquêteur",lang))
-            st.plotly_chart(time_distribution)
+        with cart_col[1]:
+            make_school_map_test(data_to_plot_cart,opacity=opacity,style_carte=style_carte,palet_color=fond_color,width=780, height=1000)
         
+        
+        enq_type=st.multiselect(traduire_texte("Sélectionner un type de questionnaire",lang),data_to_plot["Type"].unique(), default=data_to_plot["Type"].unique()[1])
+        data_superviz_heat_map=All_data_user[(data_to_plot["Type"].isin(enq_type))]
+        cross_enq=pd.crosstab(data_superviz_heat_map["Enqueteur"],data_superviz_heat_map["Date"])
+        if data_superviz_heat_map.shape[0]>0:
+            make_st_heatmap_echat2(cross_enq,title=traduire_texte("Charge de travail accomplie par enquêteur",lang)) 
+            
+            
+        cltime=st.columns([2.5,9])
+        with cltime[0]:
+            time_type=st.selectbox("Choississez un type de questionnaire", options=All_data["Type"].unique())
+        with cltime[1]:
+            pass #Sup_time=st.multiselect("SUPERVISEUR", options=All_data["Superviseur"].unique(), default=All_data["Superviseur"].unique())
+            #time_All_data=All_data[All_data["Superviseur"].isin(Sup_time)]
+        sc=st.columns([7,3])
+        with sc[0]:
+            time_All_data=All_data[All_data["Type"]==time_type]
+            time_distribution=px.box(time_All_data,y="Temp",x="Enqueteur",color="Enqueteur",title=traduire_texte(f"Distribution des temps de remplissage (en minutes) du questionnaire {time_type} par enquêteur",lang))
+            st.plotly_chart(time_distribution)
+        with sc[1]:
+            All_time_distribution=px.box(time_All_data,y="Temp",title=traduire_texte(f"Temps globale de remplissage (en minutes) du questionnaire {time_type}",lang))
+            st.plotly_chart(All_time_distribution)
+       
 if __name__ == "__main__":
     main()     
