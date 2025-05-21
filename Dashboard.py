@@ -791,15 +791,15 @@ def main():
         All_data=pd.read_excel("DataGood.xlsx")
         geo_data=gpd.read_file("geo_data.shp")
         All_data["Date"]=All_data["Date"].dt.date
+        geo_data=geo_data.rename(columns={"Etablissem":"Etablissement"})
             
         All_data["Superviseur"] = "S_" + All_data["Superviseur"].astype(str)
         All_data["Enqueteur"] = "E_" + All_data["Enqueteur"].astype(str)
         All_data["Temp"]=round((All_data["Heure fin"]-All_data["Heure debut"])/60,2)
-     # =================================================================================     
-        
-        
-       
-        
+     # =================================================================================
+
+
+
         # Create a dictionary of dictionaries
         role_counts = {
             "Superviseur": data_rep["SUP"].value_counts().to_dict(),
@@ -811,8 +811,13 @@ def main():
         charge_controleur=data_rep["CTR"].value_counts()
         charge_superviseur=data_rep["SUP"].value_counts()
         
+        
+        
         All_data['Total_enfa'] = np.where(All_data['Type'] == 'Enfant', 1, 0)
         All_data['Total_ense'] = np.where(All_data['Type'] == 'Enseignant', 1, 0)
+        All_data['Total_maire'] = np.where(All_data['Type'] == 'Maire', 1, 0)
+        All_data['Total_chef'] = np.where(All_data['Type'] == 'Chefferie', 1, 0)
+        
         logo=Image.open("Logo_INS.png")
         logo2=Image.open("Logo_FEICOM.png")
         cl_tb=st.columns([1,7,1])
@@ -890,6 +895,8 @@ def main():
             f"📊 {traduire_texte('PERFORMANCE ET QUALITE DES DONNEES', lang)}"
             ])
         
+        #======PREMIER ONGLET=========================
+        #=========ANALYSE GENERALE=========================
         with tabs[0]:
             ca=st.columns(5)
             df_date1=data_to_plot[data_to_plot["Date"]==la_date.strftime("%Y-%m-%d")]
@@ -982,8 +989,11 @@ def main():
                     fond_color= "orange"
                 else:
                     fond_color= "blues"
-                #data_to_plot_cart=data[data["Type_Quest"]==type_questionnaire]
-            make_school_map_test(data,opacity=opacity,style_carte=style_carte,palet_color="blues",width=780, height=1000)
+                data_to_plot_cart=geo_data[geo_data["Type"]==type_questionnaire]
+            make_school_map_final(data_to_plot_cart,opacity=opacity,style_carte=style_carte,palet_color="blues",width=780, height=1000)
+        
+        #====DEUXIEME PARTIE=========================================
+        #===================ANALYSE DE LA PERFORMANCE ET DE LA QUALITE DES DONNEES=========
         with tabs[1]:
             col1=st.columns([1,1])
             with col1[0]:
@@ -1011,12 +1021,14 @@ def main():
                 with sbcl[1]:
                    make_progress_char(total_progress_sup,couleur="",titre=traduire_texte("Progression de la collecte",lang))
                 
-                progress_enf_sup=data_superviz['Type'].value_counts()["Elève"]/(18*data_rep.shape[0])
-                progress_ens_sup=data_superviz['Type'].value_counts()["Enseignant"]/(3*data_rep.shape[0])
-                progress_maire_sup=data_superviz['Type'].value_counts()["Maire"]/(data_rep.shape[0])
-                progress_chef_sup=data_superviz['Type'].value_counts()["Chefferie"]/(data_rep.shape[0])
-                progress_em_sup=data_superviz['Type'].value_counts()["Ecole-Maire"]/(data_rep.shape[0])
                 
+                sup_rep=data_rep[data_rep["SUP"]==superviseur]
+                progress_enf_sup=data_superviz['Type'].value_counts()["Elève"]/(18*sup_rep.shape[0]) if "Elève" in data_superviz['Type'].value_counts() else 0
+                progress_ens_sup=data_superviz['Type'].value_counts()["Enseignant"]/(3*sup_rep.shape[0]) if "Enseignant" in data_superviz['Type'].value_counts() else 0
+                progress_maire_sup=data_superviz['Type'].value_counts()["Maire"]/(sup_rep.shape[0]) if "Maire" in data_superviz['Type'].value_counts() else 0
+                progress_chef_sup=data_superviz['Type'].value_counts()["Chefferie"]/(sup_rep.shape[0]) if "Chefferie" in data_superviz['Type'].value_counts() else 0
+                progress_em_sup=data_superviz['Type'].value_counts()["Ecole-Maire"]/(sup_rep.shape[0]) if "Ecole-Maire" in data_superviz['Type'].value_counts() else 0
+
                 make_multi_progress_bar(["Elève","Enseignant","Maire","Chefferie","Ecole-Maire"],[progress_enf_sup,progress_ens_sup,progress_maire_sup,progress_chef_sup,progress_em_sup], colors=palette)
                 
                 #data_tx_sup=data_superviz.groupby(['Région']).agg({'Total_enfa':'sum','Total_ense':'sum'}).reset_index()
